@@ -7,12 +7,12 @@ import (
 	"flag"
 	"fmt"
 
-	"gateway/internal/config"
-	"gateway/internal/handler"
-	"gateway/internal/middleware"
-	"gateway/internal/svc"
+	"github.com/uwu-octane/antBackend/gateway/internal/config"
+	"github.com/uwu-octane/antBackend/gateway/internal/handler"
+	"github.com/uwu-octane/antBackend/gateway/internal/middleware"
+	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 
-	"common/envloader"
+	"github.com/uwu-octane/antBackend/common/envloader"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"

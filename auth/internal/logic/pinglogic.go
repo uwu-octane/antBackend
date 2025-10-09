@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"api/v1/auth"
-	"auth/internal/svc"
+	"github.com/uwu-octane/antBackend/api/v1/auth"
+	"github.com/uwu-octane/antBackend/auth/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

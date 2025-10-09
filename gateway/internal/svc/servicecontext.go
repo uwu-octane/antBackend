@@ -4,9 +4,9 @@
 package svc
 
 import (
-	"auth/authservice"
-	"gateway/internal/config"
-	"user/userservice"
+	"github.com/uwu-octane/antBackend/auth/authservice"
+	"github.com/uwu-octane/antBackend/gateway/internal/config"
+	"github.com/uwu-octane/antBackend/user/userservice"
 
 	"github.com/zeromicro/go-zero/zrpc"
 )

@@ -1,4 +1,4 @@
-module common
+module github.com/uwu-octane/antBackend/common
 
 go 1.25.2
 

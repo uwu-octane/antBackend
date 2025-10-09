@@ -7,9 +7,9 @@ package server
 import (
 	"context"
 
-	"api/v1/auth"
-	"auth/internal/logic"
-	"auth/internal/svc"
+	"github.com/uwu-octane/antBackend/api/v1/auth"
+	"github.com/uwu-octane/antBackend/auth/internal/logic"
+	"github.com/uwu-octane/antBackend/auth/internal/svc"
 )
 
 type AuthServiceServer struct {

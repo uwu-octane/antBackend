@@ -1,10 +1,20 @@
-module gateway
+module github.com/uwu-octane/antBackend/gateway
 
 go 1.25.2
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/uwu-octane/antBackend/auth v0.0.0
+	github.com/uwu-octane/antBackend/common v0.0.0
+	github.com/uwu-octane/antBackend/user v0.0.0
 	github.com/zeromicro/go-zero v1.9.1
+)
+
+replace (
+	github.com/uwu-octane/antBackend/api => ../api
+	github.com/uwu-octane/antBackend/auth => ../auth
+	github.com/uwu-octane/antBackend/common => ../common
+	github.com/uwu-octane/antBackend/user => ../user
 )
 
 require (
@@ -31,6 +41,7 @@ require (
 	github.com/grafana/pyroscope-go v1.2.7 // indirect
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
+	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -48,6 +59,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/redis/go-redis/v9 v9.15.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
+	github.com/uwu-octane/antBackend/api v0.0.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.15 // indirect

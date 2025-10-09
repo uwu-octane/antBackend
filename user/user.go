@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
-	"api/v1/user"
-	"user/internal/config"
-	"user/internal/server"
-	"user/internal/svc"
+	"github.com/uwu-octane/antBackend/api/v1/user"
+	"github.com/uwu-octane/antBackend/user/internal/config"
+	"github.com/uwu-octane/antBackend/user/internal/server"
+	"github.com/uwu-octane/antBackend/user/internal/svc"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
