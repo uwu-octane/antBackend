@@ -5,6 +5,11 @@
 *.so
 *.dylib
 
+# Compiled Go binaries
+/auth/auth
+/gateway/gateway
+/user/user
+
 # Test binary, built with `go test -c`
 *.test
 
