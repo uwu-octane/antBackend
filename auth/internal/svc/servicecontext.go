@@ -1,6 +1,6 @@
 package svc
 
-import "auth/internal/config"
+import "github.com/uwu-octane/antBackend/auth/internal/config"
 
 type ServiceContext struct {
 	Config config.Config

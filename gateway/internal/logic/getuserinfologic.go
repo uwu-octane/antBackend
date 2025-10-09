@@ -6,7 +6,7 @@ package logic
 import (
 	"context"
 
-	"gateway/internal/svc"
+	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 

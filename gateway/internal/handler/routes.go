@@ -6,7 +6,7 @@ package handler
 import (
 	"net/http"
 
-	"gateway/internal/svc"
+	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )

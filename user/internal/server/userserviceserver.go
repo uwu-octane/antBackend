@@ -7,9 +7,9 @@ package server
 import (
 	"context"
 
-	"api/v1/user"
-	"user/internal/logic"
-	"user/internal/svc"
+	"github.com/uwu-octane/antBackend/api/v1/user"
+	"github.com/uwu-octane/antBackend/user/internal/logic"
+	"github.com/uwu-octane/antBackend/user/internal/svc"
 )
 
 type UserServiceServer struct {

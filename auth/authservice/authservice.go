@@ -7,7 +7,7 @@ package authservice
 import (
 	"context"
 
-	"api/v1/auth"
+	"github.com/uwu-octane/antBackend/api/v1/auth"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

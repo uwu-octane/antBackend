@@ -7,7 +7,7 @@ package userservice
 import (
 	"context"
 
-	"api/v1/user"
+	"github.com/uwu-octane/antBackend/api/v1/user"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

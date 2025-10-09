@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"context"
-	"gateway/internal/svc"
 	"net/http"
 	"strings"
+
+	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 )
 
 type Jwt struct {

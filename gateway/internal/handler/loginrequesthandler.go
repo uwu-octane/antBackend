@@ -6,9 +6,9 @@ package handler
 import (
 	"net/http"
 
-	"gateway/internal/logic"
-	"gateway/internal/svc"
-	"gateway/internal/types"
+	"github.com/uwu-octane/antBackend/gateway/internal/logic"
+	"github.com/uwu-octane/antBackend/gateway/internal/svc"
+	"github.com/uwu-octane/antBackend/gateway/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
