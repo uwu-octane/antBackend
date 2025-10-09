@@ -9,7 +9,10 @@ import (
 
 	"gateway/internal/config"
 	"gateway/internal/handler"
+	"gateway/internal/middleware"
 	"gateway/internal/svc"
+
+	"common/envloader"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -19,14 +22,19 @@ var configFile = flag.String("f", "etc/gateway-api.yaml", "the config file")
 
 func main() {
 	flag.Parse()
-
+	envloader.Load()
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	server := rest.MustNewServer(c.RestConf)
+	server := rest.MustNewServer(c.RestConf,
+		rest.WithCors(),
+	)
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)
+	server.Use(middleware.NewRequestID().Handle)
+	server.Use(middleware.NewJwt(ctx).Handle)
+	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
 	handler.RegisterHandlers(server, ctx)
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
