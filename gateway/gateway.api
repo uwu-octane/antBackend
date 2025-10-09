@@ -1,0 +1,42 @@
+syntax = "v1"
+
+type Request {
+	LoginRequest {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+}
+
+type Response {
+	LoginResponse {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		ExpiresIn    int64  `json:"expires_in"`
+	}
+	UserInfoResponse {
+		UserId   int64  `json:"user_id"`
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+}
+
+@server (
+	prefix: /api/v1
+)
+service gateway-api {
+	@handler Ping
+	get /ping
+
+	@handler LoginRequest
+	post /login (Request) returns (Response)
+
+	@handler Refresh
+	post /refresh
+
+	@handler GetUserInfo
+	get /user/info
+
+	@handler GatewayHandler
+	get /from/:name (Request) returns (Response)
+}
+
