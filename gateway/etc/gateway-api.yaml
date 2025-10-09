@@ -1,0 +1,27 @@
+Name: gateway-api
+Host: 0.0.0.0
+Port: 7777
+Timeout: 30s
+
+Cors:
+  - "${VITE_HOST}"
+
+Log:
+  Encoding: json
+  Level: info
+
+AuthRpc:
+  Endpoint: localhost:7778
+  NonBlock: true # nonblock是go-zero的特性，用于非阻塞地调用远程服务
+
+UserRpc:
+  Endpoint: localhost:7779
+  NonBlock: true 
+
+Auth:
+  Strict: true # 严格模式，用于确保调用远程服务时，服务端返回的错误信息是完整的
+  TokenLookup: "header: Authorization" # 用于从请求头中获取token
+  IgnoreRoutes: # 忽略的请求路径
+    - /api/v1/ping
+    - /api/v1/login
+    - /api/v1/refresh
