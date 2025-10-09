@@ -66,3 +66,6 @@ image/output/*
 # Config files (if they contain sensitive data)
 # etc/*.yaml
 # etc/*.yml
+
+protoctl
+protoctl.go

@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
+	"api/v1/user"
 	"user/internal/svc"
-	"user/user"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -23,8 +23,8 @@ func NewPingLogic(ctx context.Context, svcCtx *svc.ServiceContext) *PingLogic {
 	}
 }
 
-func (l *PingLogic) Ping(in *user.Request) (*user.Response, error) {
+func (l *PingLogic) Ping(in *user.PingReq) (*user.PingResp, error) {
 	// todo: add your logic here and delete this line
 
-	return &user.Response{}, nil
+	return &user.PingResp{}, nil
 }

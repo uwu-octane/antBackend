@@ -1,0 +1,21 @@
+# goctl 配置文件
+# 官方文档: https://go-zero.dev/en/docs/tutorials/cli/overview
+
+# 模板配置
+home: ""
+remote: "https://github.com/zeromicro/go-zero-template.git"
+branch: "master"
+
+# API 服务配置
+api:
+  style: gozero  # 文件命名风格
+
+# RPC 服务配置
+rpc:
+  dir: "./"  # RPC服务代码生成目录
+  style: gozero  # 文件命名风格
+  idl: .proto  # IDL文件扩展名
+  suffix: _v1  # 生成文件后缀
+  package: api.v1  # 默认包名
+  pbOutput: "./api/gen/go"  # proto编译生成的pb.go文件输出目录
+  multiple: false  # 是否生成多个proto文件

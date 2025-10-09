@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"auth/auth"
+	"api/v1/auth"
 	"auth/internal/config"
 	"auth/internal/server"
 	"auth/internal/svc"
@@ -26,7 +26,7 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		auth.RegisterAuthServer(grpcServer, server.NewAuthServer(ctx))
+		auth.RegisterAuthServiceServer(grpcServer, server.NewAuthServiceServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)
