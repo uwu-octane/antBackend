@@ -59,6 +59,7 @@ func (*PingReq) Descriptor() ([]byte, []int) {
 
 type PingResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pong          string                 `protobuf:"bytes,1,opt,name=pong,proto3" json:"pong,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -93,16 +94,204 @@ func (*PingResp) Descriptor() ([]byte, []int) {
 	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{1}
 }
 
+func (x *PingResp) GetPong() string {
+	if x != nil {
+		return x.Pong
+	}
+	return ""
+}
+
+// login request
+type LoginReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password      string                 `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginReq) Reset() {
+	*x = LoginReq{}
+	mi := &file_api_v1_auth_auth_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginReq) ProtoMessage() {}
+
+func (x *LoginReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_auth_auth_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginReq.ProtoReflect.Descriptor instead.
+func (*LoginReq) Descriptor() ([]byte, []int) {
+	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *LoginReq) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *LoginReq) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+// login response
+type LoginResp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"` //
+	ExpiresIn     int64                  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`         //sec
+	TokenType     string                 `protobuf:"bytes,4,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`          //bearer
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LoginResp) Reset() {
+	*x = LoginResp{}
+	mi := &file_api_v1_auth_auth_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoginResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginResp) ProtoMessage() {}
+
+func (x *LoginResp) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_auth_auth_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginResp.ProtoReflect.Descriptor instead.
+func (*LoginResp) Descriptor() ([]byte, []int) {
+	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LoginResp) GetAccessToken() string {
+	if x != nil {
+		return x.AccessToken
+	}
+	return ""
+}
+
+func (x *LoginResp) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
+func (x *LoginResp) GetExpiresIn() int64 {
+	if x != nil {
+		return x.ExpiresIn
+	}
+	return 0
+}
+
+func (x *LoginResp) GetTokenType() string {
+	if x != nil {
+		return x.TokenType
+	}
+	return ""
+}
+
+type RefreshReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshReq) Reset() {
+	*x = RefreshReq{}
+	mi := &file_api_v1_auth_auth_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshReq) ProtoMessage() {}
+
+func (x *RefreshReq) ProtoReflect() protoreflect.Message {
+	mi := &file_api_v1_auth_auth_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshReq.ProtoReflect.Descriptor instead.
+func (*RefreshReq) Descriptor() ([]byte, []int) {
+	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RefreshReq) GetRefreshToken() string {
+	if x != nil {
+		return x.RefreshToken
+	}
+	return ""
+}
+
 var File_api_v1_auth_auth_proto protoreflect.FileDescriptor
 
 const file_api_v1_auth_auth_proto_rawDesc = "" +
 	"\n" +
 	"\x16api/v1/auth/auth.proto\x12\aauth.v1\"\t\n" +
-	"\aPingReq\"\n" +
+	"\aPingReq\"\x1e\n" +
+	"\bPingResp\x12\x12\n" +
+	"\x04pong\x18\x01 \x01(\tR\x04pong\"B\n" +
+	"\bLoginReq\x12\x1a\n" +
+	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x91\x01\n" +
+	"\tLoginResp\x12!\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
+	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
 	"\n" +
-	"\bPingResp2:\n" +
+	"expires_in\x18\x03 \x01(\x03R\texpiresIn\x12\x1d\n" +
+	"\n" +
+	"token_type\x18\x04 \x01(\tR\ttokenType\"1\n" +
+	"\n" +
+	"RefreshReq\x12#\n" +
+	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken2\x9e\x01\n" +
 	"\vAuthService\x12+\n" +
-	"\x04Ping\x12\x10.auth.v1.PingReq\x1a\x11.auth.v1.PingRespB\rZ\vapi/v1/authb\x06proto3"
+	"\x04Ping\x12\x10.auth.v1.PingReq\x1a\x11.auth.v1.PingResp\x12.\n" +
+	"\x05Login\x12\x11.auth.v1.LoginReq\x1a\x12.auth.v1.LoginResp\x122\n" +
+	"\aRefresh\x12\x13.auth.v1.RefreshReq\x1a\x12.auth.v1.LoginRespB.Z,github.com/uwu-octane/antBackend/api/v1/authb\x06proto3"
 
 var (
 	file_api_v1_auth_auth_proto_rawDescOnce sync.Once
@@ -116,16 +305,23 @@ func file_api_v1_auth_auth_proto_rawDescGZIP() []byte {
 	return file_api_v1_auth_auth_proto_rawDescData
 }
 
-var file_api_v1_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_api_v1_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_api_v1_auth_auth_proto_goTypes = []any{
-	(*PingReq)(nil),  // 0: auth.v1.PingReq
-	(*PingResp)(nil), // 1: auth.v1.PingResp
+	(*PingReq)(nil),    // 0: auth.v1.PingReq
+	(*PingResp)(nil),   // 1: auth.v1.PingResp
+	(*LoginReq)(nil),   // 2: auth.v1.LoginReq
+	(*LoginResp)(nil),  // 3: auth.v1.LoginResp
+	(*RefreshReq)(nil), // 4: auth.v1.RefreshReq
 }
 var file_api_v1_auth_auth_proto_depIdxs = []int32{
 	0, // 0: auth.v1.AuthService.Ping:input_type -> auth.v1.PingReq
-	1, // 1: auth.v1.AuthService.Ping:output_type -> auth.v1.PingResp
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: auth.v1.AuthService.Login:input_type -> auth.v1.LoginReq
+	4, // 2: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshReq
+	1, // 3: auth.v1.AuthService.Ping:output_type -> auth.v1.PingResp
+	3, // 4: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResp
+	3, // 5: auth.v1.AuthService.Refresh:output_type -> auth.v1.LoginResp
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -142,7 +338,7 @@ func file_api_v1_auth_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_auth_auth_proto_rawDesc), len(file_api_v1_auth_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

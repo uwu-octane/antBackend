@@ -74,3 +74,6 @@ image/output/*
 
 protoctl
 protoctl.go
+
+goctl.txt
+token.md

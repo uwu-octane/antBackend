@@ -8,7 +8,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/config"
 	"github.com/uwu-octane/antBackend/auth/internal/server"
 	"github.com/uwu-octane/antBackend/auth/internal/svc"
-
+	"github.com/uwu-octane/antBackend/common/envloader"
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -19,12 +19,13 @@ import (
 var configFile = flag.String("f", "etc/auth.yaml", "the config file")
 
 func main() {
+	envloader.Load()
 	flag.Parse()
-
 	var c config.Config
-	conf.MustLoad(*configFile, &c)
+	conf.MustLoad(*configFile, &c, conf.UseEnv())
 	ctx := svc.NewServiceContext(c)
 
+	fmt.Printf("[Boot] etcd = %s redis = %s\n", c.Etcd.Hosts, c.AuthRedis.Host)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		auth.RegisterAuthServiceServer(grpcServer, server.NewAuthServiceServer(ctx))
 
