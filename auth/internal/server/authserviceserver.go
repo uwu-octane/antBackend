@@ -27,3 +27,13 @@ func (s *AuthServiceServer) Ping(ctx context.Context, in *auth.PingReq) (*auth.P
 	l := logic.NewPingLogic(ctx, s.svcCtx)
 	return l.Ping(in)
 }
+
+func (s *AuthServiceServer) Login(ctx context.Context, in *auth.LoginReq) (*auth.LoginResp, error) {
+	l := logic.NewLoginLogic(ctx, s.svcCtx)
+	return l.Login(in)
+}
+
+func (s *AuthServiceServer) Refresh(ctx context.Context, in *auth.RefreshReq) (*auth.LoginResp, error) {
+	l := logic.NewRefreshLogic(ctx, s.svcCtx)
+	return l.Refresh(in)
+}

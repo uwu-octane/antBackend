@@ -1,6 +1,22 @@
 Name: auth.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 0.0.0.0:7777
+Mode: dev
+
 Etcd:
   Hosts:
-  - 127.0.0.1:2379
+  - ${ETCD_HOST}
   Key: auth.rpc
+
+JwtAuth:
+  Secret: "dev_secret"
+  AccessExpireSeconds: 3600
+  RefreshExpireSeconds: 604800
+
+AuthRedis:
+  Host: "${REDIS_HOST}"
+  Pass: "${REDIS_PASSWORD}"
+  Type: "node"
+  Key: "auth:"
+  Tls: false
+  NonBlock: true 
+  

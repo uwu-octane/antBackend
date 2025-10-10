@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package user.v1;
-option go_package = "api/v1/user";
+option go_package = "github.com/uwu-octane/antBackend/api/v1/user";
 
 service UserService {
   rpc Ping(PingReq) returns (PingResp);

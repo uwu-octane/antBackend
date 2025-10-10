@@ -14,11 +14,16 @@ import (
 )
 
 type (
-	PingReq  = auth.PingReq
-	PingResp = auth.PingResp
+	LoginReq   = auth.LoginReq
+	LoginResp  = auth.LoginResp
+	PingReq    = auth.PingReq
+	PingResp   = auth.PingResp
+	RefreshReq = auth.RefreshReq
 
 	AuthService interface {
 		Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PingResp, error)
+		Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
+		Refresh(ctx context.Context, in *RefreshReq, opts ...grpc.CallOption) (*LoginResp, error)
 	}
 
 	defaultAuthService struct {
@@ -35,4 +40,14 @@ func NewAuthService(cli zrpc.Client) AuthService {
 func (m *defaultAuthService) Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PingResp, error) {
 	client := auth.NewAuthServiceClient(m.cli.Conn())
 	return client.Ping(ctx, in, opts...)
+}
+
+func (m *defaultAuthService) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error) {
+	client := auth.NewAuthServiceClient(m.cli.Conn())
+	return client.Login(ctx, in, opts...)
+}
+
+func (m *defaultAuthService) Refresh(ctx context.Context, in *RefreshReq, opts ...grpc.CallOption) (*LoginResp, error) {
+	client := auth.NewAuthServiceClient(m.cli.Conn())
+	return client.Refresh(ctx, in, opts...)
 }
