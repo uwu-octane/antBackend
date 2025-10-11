@@ -8,6 +8,7 @@ require (
 	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0
 	github.com/zeromicro/go-zero v1.9.1
+	golang.org/x/sync v0.17.0
 	google.golang.org/grpc v1.65.0
 )
 

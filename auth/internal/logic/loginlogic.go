@@ -3,12 +3,12 @@ package logic
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/uwu-octane/antBackend/api/v1/auth"
 	"github.com/uwu-octane/antBackend/auth/internal/svc"
+	"github.com/uwu-octane/antBackend/auth/internal/util"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -59,7 +59,7 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	}
 
 	//* Redis：auth:refresh:<jti> = userID（Or JSON），TTL=RefreshExpireSeconds
-	key := fmt.Sprintf("%srefresh:%s", l.svcCtx.Key, refreshJti)
+	key := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, refreshJti)
 	if err := l.svcCtx.Redis.Setex(key, userID, int(refreshExpireSeconds)); err != nil {
 		return nil, err
 	}
