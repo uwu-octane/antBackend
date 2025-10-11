@@ -7,6 +7,8 @@ service AuthService {
   rpc Ping(PingReq) returns (PingResp);
   rpc Login(LoginReq) returns (LoginResp);
   rpc Refresh(RefreshReq) returns (LoginResp);
+  rpc Logout(LogoutReq) returns (LogoutResp);
+  rpc LogoutAll(LogoutAllReq) returns (LogoutResp);
 }
 
 message PingReq {}
@@ -26,5 +28,18 @@ message LoginResp {
 }
 
 message RefreshReq {
+  string refresh_token = 1;
+}
+
+message LogoutReq{
+  string refresh_token = 1;
+}
+
+message LogoutResp {
+  bool ok = 1;
+  string message = 2;
+}
+
+message LogoutAllReq {
   string refresh_token = 1;
 }
