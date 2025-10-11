@@ -10,6 +10,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/svc"
 	"github.com/uwu-octane/antBackend/auth/internal/util"
 	"github.com/zeromicro/go-zero/core/stores/redis"
+	"golang.org/x/sync/singleflight"
 )
 
 func createTestServiceContext(t *testing.T) (*svc.ServiceContext, *miniredis.Miniredis) {
@@ -33,6 +34,7 @@ func createTestServiceContext(t *testing.T) (*svc.ServiceContext, *miniredis.Min
 		Redis:       redisClient,
 		Key:         "test",
 		TokenHelper: util.CreateTokenHelper(cfg.JwtAuth),
+		RfGroup:     &singleflight.Group{},
 	}, mr
 }
 
