@@ -3,7 +3,7 @@ package svc
 import (
 	"github.com/uwu-octane/antBackend/auth/internal/config"
 	"github.com/zeromicro/go-zero/core/stores/redis"
-	"go4.org/syncutil/singleflight"
+	"golang.org/x/sync/singleflight"
 )
 
 type ServiceContext struct {
@@ -11,7 +11,7 @@ type ServiceContext struct {
 	Redis  *redis.Redis
 	Key    string
 
-	RfGroup singleflight.Group
+	RfGroup *singleflight.Group
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -21,6 +21,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Config:  c,
 		Redis:   redis,
 		Key:     c.AuthRedis.Key,
-		RfGroup: singleflight.Group{},
+		RfGroup: &singleflight.Group{},
 	}
 }

@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -131,64 +132,125 @@ func (l *RefreshLogic) SingleFlightRefresh(in *auth.RefreshReq) (*auth.LoginResp
 		return nil, errors.New("invalid token, got jti: " + jti + " and sub: " + sub)
 	}
 
-	resAny, runErr := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
-		// new jti
-		newRefreshJti := uuid.NewString()
-		newAccessJti := uuid.NewString()
-		//RefreshRotate(ctx context.Context, r *redis.Client, oldJti, newJti string, expectUserId string, newTtlSeconds int64, key string) (RefreshRotateResult, error) {
-		rot, err := dao.RefreshRotate(
-			l.ctx,
-			l.svcCtx.Redis,
-			jti,
-			newRefreshJti,
-			sub,
-			cfg.RefreshExpireSeconds,
-			l.svcCtx.Key)
-		if err != nil {
-			return nil, err
-		}
+	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
+		const maxRetries = 2
+		const redisTimeout = 150 * time.Millisecond
 
-		switch rot.Code {
-		case dao.RotateCodeOK:
-		case dao.RotateCodeOldNotFound:
-			return nil, ErrRefreshNotFound
-		case dao.RotateCodeMismatch:
-			return nil, ErrUserMismatch
-		case dao.RotateCodeReused:
-			return nil, ErrRefreshReused
-		default:
-			return nil, ErrUnknown
+		var lastErr error
+		for attempt := range maxRetries {
+			// Create short timeout context for Redis operation
+			timeoutCtx, cancel := context.WithTimeout(l.ctx, redisTimeout)
+
+			// Generate new JTIs
+			newRefreshJti := uuid.NewString()
+			newAccessJti := uuid.NewString()
+
+			// Execute Redis rotation with timeout
+			rot, err := dao.RefreshRotate(
+				timeoutCtx,
+				l.svcCtx.Redis,
+				jti,
+				newRefreshJti,
+				sub,
+				cfg.RefreshExpireSeconds,
+				l.svcCtx.Key)
+			cancel()
+
+			if err != nil {
+				lastErr = err
+				// Check if it's a temporary error (timeout, network, etc.)
+				if isTemporaryError(err) && attempt < maxRetries-1 {
+					logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
+						attempt+1, sub, jti, err)
+					time.Sleep(10 * time.Millisecond) // Small backoff
+					continue
+				}
+				// Non-retryable error or max retries reached
+				return nil, err
+			}
+
+			// Check rotate result - these are business errors (non-retryable)
+			switch rot.Code {
+			case dao.RotateCodeOldNotFound:
+				return nil, ErrRefreshNotFound
+			case dao.RotateCodeMismatch:
+				return nil, ErrUserMismatch
+			case dao.RotateCodeReused:
+				return nil, ErrRefreshReused
+			case dao.RotateCodeOK:
+				// Success - generate tokens
+			default:
+				return nil, ErrUnknown
+			}
+
+			// Generate new tokens
+			access, accessExpireSeconds, err := tokenHelper.SignAccess(sub, newAccessJti)
+			if err != nil {
+				return nil, err
+			}
+			newRefresh, _, err := tokenHelper.SignRefresh(sub, newRefreshJti)
+			if err != nil {
+				return nil, err
+			}
+
+			return &auth.LoginResp{
+				AccessToken:  access,
+				RefreshToken: newRefresh,
+				ExpiresIn:    accessExpireSeconds,
+				TokenType:    "bearer",
+			}, nil
 		}
-		access, accessExpireSeconds, err := tokenHelper.SignAccess(sub, newAccessJti)
-		if err != nil {
-			return nil, err
-		}
-		newRefresh, _, err := tokenHelper.SignRefresh(sub, newRefreshJti)
-		if err != nil {
-			return nil, err
-		}
-		return &auth.LoginResp{
-			AccessToken:  access,
-			RefreshToken: newRefresh,
-			ExpiresIn:    accessExpireSeconds,
-			TokenType:    "bearer",
-		}, nil
+		return nil, lastErr
 	})
+
 	if runErr != nil {
-		// 可观测性：异常分级记录
-		switch {
-		case errors.Is(runErr, ErrRefreshNotFound), errors.Is(runErr, ErrUserMismatch):
-			logx.WithContext(l.ctx).Errorf("refresh-anomaly user=%s jti=%s err=%v", sub, jti, runErr)
-		default:
-			logx.WithContext(l.ctx).Errorf("refresh-failed user=%s jti=%s err=%v", sub, jti, runErr)
+		// Classify errors for observability
+		isBusinessError := errors.Is(runErr, ErrRefreshNotFound) ||
+			errors.Is(runErr, ErrUserMismatch) ||
+			errors.Is(runErr, ErrRefreshReused)
+
+		if isBusinessError {
+			// Deterministic business failure - don't forget, just log
+			logx.WithContext(l.ctx).Infof("refresh-business-error user=%s jti=%s err=%v", sub, jti, runErr)
+		} else {
+			// Temporary/infrastructure error - forget to allow retry
+			l.svcCtx.RfGroup.Forget(jti)
+			logx.WithContext(l.ctx).Errorf("refresh-infra-error user=%s jti=%s err=%v (forgotten)", sub, jti, runErr)
 		}
 		return nil, runErr
 	}
 	return resAny.(*auth.LoginResp), nil
 }
 
-//todo
-// 	1.	Redis 值存 JSON：{uid, device, ip, lastRefresh, ver}；
-// 2.	并发保护：SETNX / Lua 原子旋转；
-// 3.	重用检测：旧 jti 再来 → 记审计 & 封禁该会话；
-// 4.	滑动过期：每次刷新把 Redis TTL 重置为“会话最长不活跃时间”。
+// isTemporaryError checks if an error is temporary and retryable
+func isTemporaryError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	// Context timeout/cancellation
+	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+		return true
+	}
+
+	// Check error message for common temporary patterns
+	errMsg := err.Error()
+	temporaryPatterns := []string{
+		"connection refused",
+		"connection reset",
+		"i/o timeout",
+		"timeout",
+		"broken pipe",
+		"no route to host",
+		"network is unreachable",
+		"temporary failure",
+	}
+
+	for _, pattern := range temporaryPatterns {
+		if strings.Contains(strings.ToLower(errMsg), pattern) {
+			return true
+		}
+	}
+
+	return false
+}
