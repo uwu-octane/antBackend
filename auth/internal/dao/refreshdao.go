@@ -27,10 +27,18 @@ type RefreshRotateResult struct {
 	Message string
 }
 
-func RefreshRotate(ctx context.Context, r *redis.Redis, oldJti string, newJti string, expectUserId string, newTtlSeconds int64, key string) (RefreshRotateResult, error) {
-	oldKey := util.RedisKey(key, util.RedisKeyTypeRefresh, oldJti)
-	reuseKey := util.RedisKey(key, util.RedisKeyTypeReuse, oldJti)
-	newKey := util.RedisKey(key, util.RedisKeyTypeRefresh, newJti)
+func RefreshRotate(
+	ctx context.Context,
+	r *redis.Redis,
+	keyPrefix string,
+	oldJti string,
+	newJti string,
+	expectUserId string,
+	newTtlSeconds int,
+) (RefreshRotateResult, error) {
+	oldKey := util.RedisKey(keyPrefix, util.RedisKeyTypeRefresh, oldJti)
+	reuseKey := util.RedisKey(keyPrefix, util.RedisKeyTypeReuse, oldJti)
+	newKey := util.RedisKey(keyPrefix, util.RedisKeyTypeRefresh, newJti)
 
 	replay, err := r.EvalCtx(ctx, luaRefreshRotate, []string{oldKey, reuseKey, newKey},
 		[]any{expectUserId, fmt.Sprintf("%d", newTtlSeconds)})
@@ -40,7 +48,10 @@ func RefreshRotate(ctx context.Context, r *redis.Redis, oldJti string, newJti st
 		return RefreshRotateResult{}, err
 	}
 
-	codeInt, _ := replay.(int64)
+	codeInt, ok := replay.(int64)
+	if !ok {
+		return RefreshRotateResult{Code: -999, Message: "non-integer reply from lua"}, nil
+	}
 	code := RotateCode(codeInt)
 
 	switch code {
