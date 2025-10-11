@@ -36,7 +36,7 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 	}
 }
 
-func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
+func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	if in.GetRefreshToken() == "" {
 		return nil, errors.New("refresh token is required")
 	}
@@ -105,7 +105,8 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	}, nil
 }
 
-func (l *RefreshLogic) SingleFlightRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
+// single flight refresh
+func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	if in.GetRefreshToken() == "" {
 		return nil, errors.New("refresh token is required")
 	}
@@ -137,7 +138,7 @@ func (l *RefreshLogic) SingleFlightRefresh(in *auth.RefreshReq) (*auth.LoginResp
 		const redisTimeout = 150 * time.Millisecond
 
 		var lastErr error
-		for attempt := range maxRetries {
+		for attempt := 0; attempt < maxRetries; attempt++ {
 			// Create short timeout context for Redis operation
 			timeoutCtx, cancel := context.WithTimeout(l.ctx, redisTimeout)
 
@@ -146,14 +147,24 @@ func (l *RefreshLogic) SingleFlightRefresh(in *auth.RefreshReq) (*auth.LoginResp
 			newAccessJti := uuid.NewString()
 
 			// Execute Redis rotation with timeout
+			// RefreshRotate(
+			// 	ctx context.Context,
+			// 	r *redis.Redis,
+			// 	keyPrefix string,
+			// 	oldJti string,
+			// 	newJti string,
+			// 	expectUserId string,
+			// 	newTtlSeconds int,
+			// )
 			rot, err := dao.RefreshRotate(
 				timeoutCtx,
 				l.svcCtx.Redis,
+				l.svcCtx.Key,
 				jti,
 				newRefreshJti,
 				sub,
-				cfg.RefreshExpireSeconds,
-				l.svcCtx.Key)
+				int(cfg.RefreshExpireSeconds),
+			)
 			cancel()
 
 			if err != nil {

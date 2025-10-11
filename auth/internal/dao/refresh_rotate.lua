@@ -16,7 +16,7 @@ if not oldVal then
 end
 
 -- check if the user id in the old value matches the expected user id
-if oldVal["uid"] ~= ARGV[1] then 
+if oldVal ~= ARGV[1] then 
     return -1
 end
 
@@ -25,8 +25,8 @@ if redis.call("EXISTS", KEYS[2]) == 1 then
     return 2
 end
 
--- mark old jti as used
-redis.call("SET", KEYS[2], 1)
+-- mark old jti as used with the same TTL as new token
+redis.call("SET", KEYS[2], 1, "EX", tonumber(ARGV[2]))
 
 -- delete the old value
 redis.call("DEL", KEYS[1])
