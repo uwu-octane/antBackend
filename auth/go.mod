@@ -3,8 +3,10 @@ module github.com/uwu-octane/antBackend/auth
 go 1.25.2
 
 require (
+	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
+	github.com/stretchr/testify v1.11.1
 	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0
 	github.com/zeromicro/go-zero v1.9.1
@@ -17,7 +19,6 @@ replace github.com/uwu-octane/antBackend/api => ../api
 replace github.com/uwu-octane/antBackend/common => ../common
 
 require (
-	github.com/alicebob/miniredis/v2 v2.35.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -52,6 +53,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_golang v1.21.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect

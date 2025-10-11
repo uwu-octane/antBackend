@@ -68,7 +68,7 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 		return nil, err
 	}
 	//* jti ->sid (index of jti to sid)
-	if _, err := l.svcCtx.Redis.Sadd(util.JtiSidKey(l.svcCtx.Key, accessJti), sid); err != nil {
+	if err := l.svcCtx.Redis.Setex(util.JtiSidKey(l.svcCtx.Key, refreshJti), sid, int(refreshExpireSeconds)); err != nil {
 		return nil, err
 	}
 
