@@ -1,42 +1,55 @@
 syntax = "v1"
 
-type Request {
-	LoginRequest {
+info (
+	title: "Gateway"
+	desc:  "Auth Gateway (Access校验 + 认证路由入口)"
+)
+
+type (
+	LoginReq {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
-}
-
-type Response {
-	LoginResponse {
+	LoginResp {
 		AccessToken  string `json:"access_token"`
 		RefreshToken string `json:"refresh_token"`
 		ExpiresIn    int64  `json:"expires_in"`
+		TokenType    string `json:"token_type"`
 	}
-	UserInfoResponse {
+	RefreshReq {
+		RefreshToken string `json:"refresh_token"`
+	}
+	UserInfoResp {
 		UserId   int64  `json:"user_id"`
 		Username string `json:"username"`
 		Email    string `json:"email"`
 	}
-}
+	MeResp {
+		Uid string `json:"uid"`
+		Jti string `json:"jti"`
+		Iat int64  `json:"iat"`
+	}
+	EmptyResp  {}
+)
 
 @server (
 	prefix: /api/v1
+	group:  api
 )
-service gateway-api {
+service gateway {
 	@handler Ping
-	get /ping
+	get /ping returns (EmptyResp)
 
-	@handler LoginRequest
-	post /login (Request) returns (Response)
+	@handler Login
+	post /login (LoginReq) returns (LoginResp)
 
 	@handler Refresh
-	post /refresh
+	post /refresh (RefreshReq) returns (LoginResp)
 
 	@handler GetUserInfo
-	get /user/info
+	get /user/info returns (UserInfoResp)
 
-	@handler GatewayHandler
-	get /from/:name (Request) returns (Response)
+	@handler Me
+	get /me returns (MeResp)
 }
 
