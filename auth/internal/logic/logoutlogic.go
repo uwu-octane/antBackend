@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/uwu-octane/antBackend/api/v1/auth"
 	"github.com/uwu-octane/antBackend/auth/internal/svc"
@@ -32,11 +31,7 @@ func (l *LogoutLogic) Logout(in *auth.LogoutReq) (*auth.LogoutResp, error) {
 		return nil, errors.New("refresh token is required")
 	}
 
-	cfg := l.svcCtx.Config.JwtAuth
-	tokenHelper := NewTokenHelper([]byte(cfg.Secret), "auth.prc",
-		time.Duration(cfg.AccessExpireSeconds)*time.Second, time.Duration(cfg.RefreshExpireSeconds)*time.Second)
-
-	claims, err := tokenHelper.Parse(in.GetRefreshToken())
+	claims, err := l.svcCtx.TokenHelper.Parse(in.GetRefreshToken())
 	if err != nil {
 		return nil, fmt.Errorf("invalid refresh token: %w", err)
 	}

@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/uwu-octane/antBackend/api/v1/auth"
@@ -30,9 +29,10 @@ func createTestServiceContext(t *testing.T) (*svc.ServiceContext, *miniredis.Min
 	})
 
 	return &svc.ServiceContext{
-		Config: cfg,
-		Redis:  redisClient,
-		Key:    "test",
+		Config:      cfg,
+		Redis:       redisClient,
+		Key:         "test",
+		TokenHelper: util.CreateTokenHelper(cfg.JwtAuth),
 	}, mr
 }
 
@@ -42,12 +42,7 @@ func TestLogout_Success(t *testing.T) {
 	defer mr.Close()
 
 	// Create test token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"
@@ -145,12 +140,7 @@ func TestLogout_WrongTokenType(t *testing.T) {
 	defer mr.Close()
 
 	// Create an access token instead of refresh token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"
@@ -183,12 +173,7 @@ func TestLogout_TokenNotFoundInRedis(t *testing.T) {
 	defer mr.Close()
 
 	// Create a valid refresh token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"
@@ -229,12 +214,7 @@ func TestLogout_SubjectMismatch(t *testing.T) {
 	defer mr.Close()
 
 	// Create test token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"
@@ -279,12 +259,7 @@ func TestLogout_MultipleLogouts(t *testing.T) {
 	defer mr.Close()
 
 	// Create test token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"
@@ -335,12 +310,7 @@ func TestLogout_WithRealRedisOperations(t *testing.T) {
 	defer mr.Close()
 
 	// Create test token
-	tokenHelper := NewTokenHelper(
-		[]byte(svcCtx.Config.JwtAuth.Secret),
-		"auth.prc",
-		time.Duration(svcCtx.Config.JwtAuth.AccessExpireSeconds)*time.Second,
-		time.Duration(svcCtx.Config.JwtAuth.RefreshExpireSeconds)*time.Second,
-	)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 
 	userId := "user-123"
 	jti := "jti-456"

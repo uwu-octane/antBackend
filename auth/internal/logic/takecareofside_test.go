@@ -51,7 +51,8 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 
 	// Parse RTOKEN1 to get jti1 and sid1
 	refreshLogic := NewRefreshLogic(ctx, svcCtx)
-	claims1, err := refreshLogic.validateRefreshToken(rtoken1)
+	tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
+	claims1, err := tokenHelper.ValidateRefreshToken(rtoken1)
 	assert.NoError(t, err)
 	jti1 := claims1.ID
 	fmt.Printf("  JTI1: %s\n", jti1)
@@ -78,7 +79,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 	fmt.Printf("  RTOKEN2: %s...\n", rtoken2[:20])
 
 	// Parse RTOKEN2 to get jti2
-	claims2, err := refreshLogic.validateRefreshToken(rtoken2)
+	claims2, err := tokenHelper.ValidateRefreshToken(rtoken2)
 	assert.NoError(t, err)
 	jti2 := claims2.ID
 	fmt.Printf("  JTI2: %s\n", jti2)
@@ -142,7 +143,8 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 			if err != nil {
 				fmt.Printf("  [%d] ✗ Failed: %v\n", idx, err)
 			} else {
-				claims, _ := refreshLogic.validateRefreshToken(resp.RefreshToken)
+				tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
+				claims, _ := tokenHelper.ValidateRefreshToken(resp.RefreshToken)
 				fmt.Printf("  [%d] ✓ Success: new JTI=%s\n", idx, claims.ID)
 			}
 		}(i)
@@ -160,7 +162,8 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 		if result.err == nil {
 			successCount++
 			if result.response != nil {
-				claims, _ := refreshLogic.validateRefreshToken(result.response.RefreshToken)
+				tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
+				claims, _ := tokenHelper.ValidateRefreshToken(result.response.RefreshToken)
 				successJti = claims.ID
 				fmt.Printf("  [%d] SUCCESS - Generated JTI: %s\n", i, successJti)
 			}
@@ -179,9 +182,10 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 
 	// All should return the same JTI
 	uniqueJtis := make(map[string]bool)
+	tokenHelper2 := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 	for _, result := range results {
 		if result.response != nil {
-			claims, _ := refreshLogic.validateRefreshToken(result.response.RefreshToken)
+			claims, _ := tokenHelper2.ValidateRefreshToken(result.response.RefreshToken)
 			uniqueJtis[claims.ID] = true
 		}
 	}
@@ -335,10 +339,11 @@ func setupTestServiceContext(redisClient *redis.Redis) *svc.ServiceContext {
 	}
 
 	return &svc.ServiceContext{
-		Config:  cfg,
-		Redis:   redisClient,
-		Key:     "auth:test",
-		RfGroup: &singleflight.Group{},
+		Config:      cfg,
+		Redis:       redisClient,
+		Key:         "auth:test",
+		RfGroup:     &singleflight.Group{},
+		TokenHelper: util.CreateTokenHelper(cfg.JwtAuth),
 	}
 }
 

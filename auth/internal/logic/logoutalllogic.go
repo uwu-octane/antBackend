@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"errors"
 
 	"github.com/uwu-octane/antBackend/api/v1/auth"
 	"github.com/uwu-octane/antBackend/auth/internal/svc"
@@ -24,7 +25,9 @@ func NewLogoutAllLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutA
 }
 
 func (l *LogoutAllLogic) LogoutAll(in *auth.LogoutAllReq) (*auth.LogoutResp, error) {
-	// todo: add your logic here and delete this line
+	if in.GetRefreshToken() == "" {
+		return nil, errors.New("refresh token is required")
+	}
 
 	return &auth.LogoutResp{}, nil
 }

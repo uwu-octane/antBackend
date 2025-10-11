@@ -16,12 +16,10 @@ import (
 )
 
 var (
-	ErrRefreshNotFound  = errors.New("refresh token revoked or expired")
-	ErrRefreshReused    = errors.New("refresh token reused (possible replay)")
-	ErrUserMismatch     = errors.New("refresh user mismatch")
-	ErrUnknown          = errors.New("unknown error")
-	ErrInvalidTokenType = errors.New("invalid token type, expected refresh token")
-	ErrInvalidClaims    = errors.New("invalid token claims")
+	ErrRefreshNotFound = errors.New("refresh token revoked or expired")
+	ErrRefreshReused   = errors.New("refresh token reused (possible replay)")
+	ErrUserMismatch    = errors.New("refresh user mismatch")
+	ErrUnknown         = errors.New("unknown error")
 )
 
 type RefreshLogic struct {
@@ -38,66 +36,9 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 	}
 }
 
-// createTokenHelper creates a new token helper instance
-func (l *RefreshLogic) createTokenHelper() *TokenHelper {
-	cfg := l.svcCtx.Config.JwtAuth
-	return NewTokenHelper(
-		[]byte(cfg.Secret),
-		"auth.prc",
-		time.Duration(cfg.AccessExpireSeconds)*time.Second,
-		time.Duration(cfg.RefreshExpireSeconds)*time.Second,
-	)
-}
-
-// validateRefreshToken validates and parses the refresh token
-func (l *RefreshLogic) validateRefreshToken(token string) (*Claims, error) {
-	if token == "" {
-		return nil, errors.New("refresh token is required")
-	}
-
-	tokenHelper := l.createTokenHelper()
-	claims, err := tokenHelper.Parse(token)
-	if err != nil {
-		logx.Errorf("invalid token: %v", err)
-		return nil, err
-	}
-
-	if claims.TokenType != "refresh" {
-		return nil, ErrInvalidTokenType
-	}
-
-	if claims.ID == "" || claims.Subject == "" {
-		return nil, ErrInvalidClaims
-	}
-
-	return claims, nil
-}
-
-// generateTokenPair generates a new access and refresh token pair
-func (l *RefreshLogic) generateTokenPair(username string, accessJti, refreshJti string) (*auth.LoginResp, error) {
-	tokenHelper := l.createTokenHelper()
-
-	access, accessExpireSeconds, err := tokenHelper.SignAccess(username, accessJti)
-	if err != nil {
-		return nil, err
-	}
-
-	refresh, _, err := tokenHelper.SignRefresh(username, refreshJti)
-	if err != nil {
-		return nil, err
-	}
-
-	return &auth.LoginResp{
-		AccessToken:  access,
-		RefreshToken: refresh,
-		ExpiresIn:    accessExpireSeconds,
-		TokenType:    "bearer",
-	}, nil
-}
-
 func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	// Validate refresh token
-	claims, err := l.validateRefreshToken(in.GetRefreshToken())
+	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetRefreshToken())
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +65,7 @@ func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, erro
 	newRefreshJti := uuid.NewString()
 	newAccessJti := uuid.NewString()
 
-	resp, err := l.generateTokenPair(username, newAccessJti, newRefreshJti)
+	resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(username, newAccessJti, newRefreshJti)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +83,7 @@ func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, erro
 // Refresh performs single-flight token refresh with retry logic
 func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	// Validate refresh token
-	claims, err := l.validateRefreshToken(in.GetRefreshToken())
+	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetRefreshToken())
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +163,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.L
 		}
 
 		// Generate new token pair
-		resp, err := l.generateTokenPair(username, newAccessJti, newRefreshJti)
+		resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(username, newAccessJti, newRefreshJti)
 		return resp, newRefreshJti, err
 	}
 
