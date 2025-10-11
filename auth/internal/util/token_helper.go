@@ -1,11 +1,18 @@
-package logic
+package util
 
 import (
 	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/uwu-octane/antBackend/api/v1/auth"
+	"github.com/uwu-octane/antBackend/auth/internal/config"
 	"github.com/zeromicro/go-zero/core/logx"
+)
+
+var (
+	ErrInvalidTokenType = errors.New("invalid token type, expected refresh token")
+	ErrInvalidClaims    = errors.New("invalid token claims")
 )
 
 type TokenHelper struct {
@@ -27,6 +34,16 @@ func NewTokenHelper(secret []byte, issuer string, accessTTL time.Duration, refre
 		accessTTL:  accessTTL,
 		refreshTTL: refreshTTL,
 	}
+}
+
+// CreateTokenHelper creates a new token helper instance from config
+func CreateTokenHelper(cfg config.JwtAuthConfig) *TokenHelper {
+	return NewTokenHelper(
+		[]byte(cfg.Secret),
+		"auth.prc",
+		time.Duration(cfg.AccessExpireSeconds)*time.Second,
+		time.Duration(cfg.RefreshExpireSeconds)*time.Second,
+	)
 }
 
 /*
@@ -113,4 +130,47 @@ func (h *TokenHelper) Parse(tokenStr string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+// ValidateRefreshToken validates and parses the refresh token
+func (h *TokenHelper) ValidateRefreshToken(token string) (*Claims, error) {
+	if token == "" {
+		return nil, errors.New("refresh token is required")
+	}
+
+	claims, err := h.Parse(token)
+	if err != nil {
+		logx.Errorf("invalid token: %v", err)
+		return nil, err
+	}
+
+	if claims.TokenType != "refresh" {
+		return nil, ErrInvalidTokenType
+	}
+
+	if claims.ID == "" || claims.Subject == "" {
+		return nil, ErrInvalidClaims
+	}
+
+	return claims, nil
+}
+
+// GenerateTokenPair generates a new access and refresh token pair
+func (h *TokenHelper) GenerateTokenPair(username string, accessJti, refreshJti string) (*auth.LoginResp, error) {
+	access, accessExpireSeconds, err := h.SignAccess(username, accessJti)
+	if err != nil {
+		return nil, err
+	}
+
+	refresh, _, err := h.SignRefresh(username, refreshJti)
+	if err != nil {
+		return nil, err
+	}
+
+	return &auth.LoginResp{
+		AccessToken:  access,
+		RefreshToken: refresh,
+		ExpiresIn:    accessExpireSeconds,
+		TokenType:    "bearer",
+	}, nil
 }

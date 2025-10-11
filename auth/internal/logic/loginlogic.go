@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/uwu-octane/antBackend/api/v1/auth"
@@ -40,20 +39,15 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	userID := in.GetUsername()
 
 	//* call token helper to sign tokens
-	cfg := l.svcCtx.Config.JwtAuth
-	tokenHelper := NewTokenHelper([]byte(cfg.Secret), "auth.prc",
-		time.Duration(cfg.AccessExpireSeconds)*time.Second, time.Duration(cfg.RefreshExpireSeconds)*time.Second)
-
 	refreshJti := uuid.NewString()
 	accessJti := uuid.NewString()
 
-	accessToken, accessExpireSeconds, err := tokenHelper.SignAccess(userID, accessJti)
-
+	accessToken, accessExpireSeconds, err := l.svcCtx.TokenHelper.SignAccess(userID, accessJti)
 	if err != nil {
 		return nil, err
 	}
 
-	refreshToken, refreshExpireSeconds, err := tokenHelper.SignRefresh(userID, refreshJti)
+	refreshToken, refreshExpireSeconds, err := l.svcCtx.TokenHelper.SignRefresh(userID, refreshJti)
 	if err != nil {
 		return nil, err
 	}
