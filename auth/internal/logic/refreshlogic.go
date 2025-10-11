@@ -151,8 +151,11 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	username := claims.Subject
 
 	// Execute refresh in single-flight group to prevent concurrent refreshes of the same token
+
 	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
-		return l.executeRefreshWithRetry(jti, username)
+		resp, newJti, err := l.executeRefreshWithRetry(jti, username)
+		l.takeCareOfSid(l.svcCtx.Key, jti, username, newJti)
+		return resp, err
 	})
 
 	if runErr != nil {
@@ -164,7 +167,7 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 }
 
 // executeRefreshWithRetry executes the refresh operation with retry logic
-func (l *RefreshLogic) executeRefreshWithRetry(jti, username string) (*auth.LoginResp, error) {
+func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.LoginResp, string, error) {
 	const maxRetries = 2
 	const redisTimeout = 150 * time.Millisecond
 
@@ -184,7 +187,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(jti, username string) (*auth.Logi
 			timeoutCtx,
 			l.svcCtx.Redis,
 			l.svcCtx.Key,
-			jti,
+			oldJti,
 			newRefreshJti,
 			username,
 			int(cfg.RefreshExpireSeconds),
@@ -196,33 +199,34 @@ func (l *RefreshLogic) executeRefreshWithRetry(jti, username string) (*auth.Logi
 			// Check if it's a temporary error (timeout, network, etc.)
 			if isTemporaryError(err) && attempt < maxRetries-1 {
 				logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
-					attempt+1, username, jti, err)
+					attempt+1, username, oldJti, err)
 				time.Sleep(10 * time.Millisecond) // Small backoff
 				continue
 			}
 			// Non-retryable error or max retries reached
-			return nil, err
+			return nil, newRefreshJti, err
 		}
 
 		// Check rotate result - these are business errors (non-retryable)
 		switch rot.Code {
 		case dao.RotateCodeOldNotFound:
-			return nil, ErrRefreshNotFound
+			return nil, newRefreshJti, ErrRefreshNotFound
 		case dao.RotateCodeMismatch:
-			return nil, ErrUserMismatch
+			return nil, newRefreshJti, ErrUserMismatch
 		case dao.RotateCodeReused:
-			return nil, ErrRefreshReused
+			return nil, newRefreshJti, ErrRefreshReused
 		case dao.RotateCodeOK:
 			// Success - generate tokens
 		default:
-			return nil, ErrUnknown
+			return nil, newRefreshJti, ErrUnknown
 		}
 
 		// Generate new token pair
-		return l.generateTokenPair(username, newAccessJti, newRefreshJti)
+		resp, err := l.generateTokenPair(username, newAccessJti, newRefreshJti)
+		return resp, newRefreshJti, err
 	}
 
-	return nil, lastErr
+	return nil, "", lastErr
 }
 
 // handleRefreshError classifies and logs refresh errors
@@ -272,4 +276,31 @@ func isTemporaryError(err error) bool {
 	}
 
 	return false
+}
+
+func (l *RefreshLogic) takeCareOfSid(key string, oldJti string, uid string, newJti string) error {
+	sid, _ := l.svcCtx.Redis.Get(util.JtiSidKey(key, oldJti))
+
+	//if no sid history, generate a new one
+	if sid == "" {
+		sid = uuid.NewString()
+		//user ->sids
+		if _, err := l.svcCtx.Redis.Sadd(util.UserSidsKey(key, uid), sid); err != nil {
+			logx.WithContext(l.ctx).Errorf("sid backfill Sadd failed uid=%s sid=%s err=%v", uid, sid, err)
+		}
+	}
+
+	//take care of sid -> jtis: remove old jti, add new jti
+	_, _ = l.svcCtx.Redis.Srem(util.SidSetKey(key, sid), oldJti)
+	_, _ = l.svcCtx.Redis.Sadd(util.SidSetKey(key, sid), newJti)
+
+	//write new jti index jti-> sid(TTL = refresh expire seconds)
+	if err := l.svcCtx.Redis.Setex(util.JtiSidKey(key, newJti), sid, int(l.svcCtx.Config.JwtAuth.RefreshExpireSeconds)); err != nil {
+		logx.WithContext(l.ctx).Errorf("jti sid index Setex failed jti=%s sid=%s err=%v", newJti, sid, err)
+	}
+
+	//remove old jti index jti-> sid(TTL = refresh expire seconds)
+	_, _ = l.svcCtx.Redis.Del(util.JtiSidKey(key, oldJti))
+
+	return nil
 }
