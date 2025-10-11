@@ -3,22 +3,33 @@
 
 package types
 
-type Request struct {
-	LoginRequest struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
+type EmptyResp struct {
 }
 
-type Response struct {
-	LoginResponse struct {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int64  `json:"expires_in"`
-	}
-	UserInfoResponse struct {
-		UserId   int64  `json:"user_id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
-	}
+type LoginReq struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type LoginResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+}
+
+type MeResp struct {
+	Uid string `json:"uid"`
+	Jti string `json:"jti"`
+	Iat int64  `json:"iat"`
+}
+
+type RefreshReq struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type UserInfoResp struct {
+	UserId   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
 }
