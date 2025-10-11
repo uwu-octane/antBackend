@@ -1,0 +1,11 @@
+plan:
+	•	新增会话族 sid（session family）：一次登录产生一个 sid，该登录链上的所有 refresh jti 都归入这个 sid。
+	•	目标：实现**“当前用户的全部会话撤销”（全端登出），RPC 通过任一 refresh_token**鉴别用户并执行。
+	•	数据结构（Redis）新增三类集合/映射：
+	•	auth:user:<uid>:sids（SET）——一个用户拥有的所有 sid
+	•	auth:sid:<sid>（SET）——该 sid 下的活跃 refresh jti 列表
+	•	auth:jti_sid:<jti>（STRING, TTL 同 refresh）——反向索引：某个 jti 属于哪个 sid
+	•	登录时创建 sid 并建好三份索引。
+	•	刷新成功后：把旧 jti 从 sid 集合里移除，把新 jti 加入，并写入 auth:jti_sid:<newJti>。这一步放在 Lua 之外做，简化改动；即便极端并发下集合偶有延迟，也不影响刷新安全，LogoutAll 最多“多删/少删一两条”，不会破坏一致性。
+	•	新增 RPC：LogoutAll(LogoutAllReq{refresh_token}) returns (LogoutResp)，基于 refresh_token 定位 user，再批量撤销其所有 jti_sid
+    

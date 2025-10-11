@@ -16,10 +16,12 @@ import (
 )
 
 var (
-	ErrRefreshNotFound = errors.New("refresh token revoked or expired")
-	ErrRefreshReused   = errors.New("refresh token reused (possible replay)")
-	ErrUserMismatch    = errors.New("refresh user mismatch")
-	ErrUnknown         = errors.New("unknown error")
+	ErrRefreshNotFound  = errors.New("refresh token revoked or expired")
+	ErrRefreshReused    = errors.New("refresh token reused (possible replay)")
+	ErrUserMismatch     = errors.New("refresh user mismatch")
+	ErrUnknown          = errors.New("unknown error")
+	ErrInvalidTokenType = errors.New("invalid token type, expected refresh token")
+	ErrInvalidClaims    = errors.New("invalid token claims")
 )
 
 type RefreshLogic struct {
@@ -36,201 +38,207 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 	}
 }
 
-func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
-	if in.GetRefreshToken() == "" {
+// createTokenHelper creates a new token helper instance
+func (l *RefreshLogic) createTokenHelper() *TokenHelper {
+	cfg := l.svcCtx.Config.JwtAuth
+	return NewTokenHelper(
+		[]byte(cfg.Secret),
+		"auth.prc",
+		time.Duration(cfg.AccessExpireSeconds)*time.Second,
+		time.Duration(cfg.RefreshExpireSeconds)*time.Second,
+	)
+}
+
+// validateRefreshToken validates and parses the refresh token
+func (l *RefreshLogic) validateRefreshToken(token string) (*Claims, error) {
+	if token == "" {
 		return nil, errors.New("refresh token is required")
 	}
 
-	cfg := l.svcCtx.Config.JwtAuth
-	tokenHelper := NewTokenHelper([]byte(cfg.Secret), "auth.prc",
-		time.Duration(cfg.AccessExpireSeconds)*time.Second, time.Duration(cfg.RefreshExpireSeconds)*time.Second)
-
-	claims, err := tokenHelper.Parse(in.GetRefreshToken())
+	tokenHelper := l.createTokenHelper()
+	claims, err := tokenHelper.Parse(token)
 	if err != nil {
 		logx.Errorf("invalid token: %v", err)
 		return nil, err
 	}
 
-	typ := claims.TokenType
-	if typ != "refresh" {
-		return nil, errors.New("invalid token type, got " + typ)
+	if claims.TokenType != "refresh" {
+		return nil, ErrInvalidTokenType
 	}
 
-	jti := claims.ID
-	sub := claims.Subject
-
-	if jti == "" || sub == "" {
-		return nil, errors.New("invalid token, got jti: " + jti + " and sub: " + sub)
+	if claims.ID == "" || claims.Subject == "" {
+		return nil, ErrInvalidClaims
 	}
 
-	//* Delete the old refresh token
-	oldKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
-	uid, err := l.svcCtx.Redis.Get(oldKey)
-	if err != nil || uid == "" {
-		return nil, errors.New("refresh token revoked or expired")
-	}
+	return claims, nil
+}
 
-	if uid != sub {
-		return nil, errors.New("invalid token, got uid: " + uid + " and sub: " + sub)
-	}
+// generateTokenPair generates a new access and refresh token pair
+func (l *RefreshLogic) generateTokenPair(username string, accessJti, refreshJti string) (*auth.LoginResp, error) {
+	tokenHelper := l.createTokenHelper()
 
-	_, err = l.svcCtx.Redis.Del(oldKey)
-	if err != nil {
-		return nil, errors.New("failed to delete refresh token")
-	}
-	//* Generate new refresh and access tokens
-	newRefreshJti := uuid.NewString()
-	newAccessJti := uuid.NewString()
-
-	access, accessExpireSeconds, err := tokenHelper.SignAccess(sub, newAccessJti)
+	access, accessExpireSeconds, err := tokenHelper.SignAccess(username, accessJti)
 	if err != nil {
 		return nil, err
 	}
 
-	newRefresh, refreshExpireSeconds, err := tokenHelper.SignRefresh(sub, newRefreshJti)
+	refresh, _, err := tokenHelper.SignRefresh(username, refreshJti)
 	if err != nil {
-		return nil, err
-	}
-
-	newKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, newRefreshJti)
-	if err := l.svcCtx.Redis.Setex(newKey, sub, int(refreshExpireSeconds)); err != nil {
 		return nil, err
 	}
 
 	return &auth.LoginResp{
 		AccessToken:  access,
-		RefreshToken: newRefresh,
+		RefreshToken: refresh,
 		ExpiresIn:    accessExpireSeconds,
 		TokenType:    "bearer",
 	}, nil
 }
 
-// single flight refresh
-func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
-	if in.GetRefreshToken() == "" {
-		return nil, errors.New("refresh token is required")
-	}
-
-	cfg := l.svcCtx.Config.JwtAuth
-	tokenHelper := NewTokenHelper([]byte(cfg.Secret), "auth.prc",
-		time.Duration(cfg.AccessExpireSeconds)*time.Second, time.Duration(cfg.RefreshExpireSeconds)*time.Second)
-
-	claims, err := tokenHelper.Parse(in.GetRefreshToken())
+func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
+	// Validate refresh token
+	claims, err := l.validateRefreshToken(in.GetRefreshToken())
 	if err != nil {
-		logx.Errorf("invalid token: %v", err)
 		return nil, err
 	}
 
-	typ := claims.TokenType
-	if typ != "refresh" {
-		return nil, errors.New("invalid token type, got " + typ)
+	jti := claims.ID
+	username := claims.Subject
+
+	// Verify token in Redis and delete old one
+	oldKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
+	uid, err := l.svcCtx.Redis.Get(oldKey)
+	if err != nil || uid == "" {
+		return nil, ErrRefreshNotFound
+	}
+
+	if uid != username {
+		return nil, ErrUserMismatch
+	}
+
+	if _, err = l.svcCtx.Redis.Del(oldKey); err != nil {
+		return nil, errors.New("failed to delete refresh token")
+	}
+
+	// Generate new token pair
+	newRefreshJti := uuid.NewString()
+	newAccessJti := uuid.NewString()
+
+	resp, err := l.generateTokenPair(username, newAccessJti, newRefreshJti)
+	if err != nil {
+		return nil, err
+	}
+
+	// Store new refresh token in Redis
+	cfg := l.svcCtx.Config.JwtAuth
+	newKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, newRefreshJti)
+	if err := l.svcCtx.Redis.Setex(newKey, username, int(cfg.RefreshExpireSeconds)); err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// Refresh performs single-flight token refresh with retry logic
+func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
+	// Validate refresh token
+	claims, err := l.validateRefreshToken(in.GetRefreshToken())
+	if err != nil {
+		return nil, err
 	}
 
 	jti := claims.ID
-	sub := claims.Subject
+	username := claims.Subject
 
-	if jti == "" || sub == "" {
-		return nil, errors.New("invalid token, got jti: " + jti + " and sub: " + sub)
-	}
-
+	// Execute refresh in single-flight group to prevent concurrent refreshes of the same token
 	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
-		const maxRetries = 2
-		const redisTimeout = 150 * time.Millisecond
-
-		var lastErr error
-		for attempt := 0; attempt < maxRetries; attempt++ {
-			// Create short timeout context for Redis operation
-			timeoutCtx, cancel := context.WithTimeout(l.ctx, redisTimeout)
-
-			// Generate new JTIs
-			newRefreshJti := uuid.NewString()
-			newAccessJti := uuid.NewString()
-
-			// Execute Redis rotation with timeout
-			// RefreshRotate(
-			// 	ctx context.Context,
-			// 	r *redis.Redis,
-			// 	keyPrefix string,
-			// 	oldJti string,
-			// 	newJti string,
-			// 	expectUserId string,
-			// 	newTtlSeconds int,
-			// )
-			rot, err := dao.RefreshRotate(
-				timeoutCtx,
-				l.svcCtx.Redis,
-				l.svcCtx.Key,
-				jti,
-				newRefreshJti,
-				sub,
-				int(cfg.RefreshExpireSeconds),
-			)
-			cancel()
-
-			if err != nil {
-				lastErr = err
-				// Check if it's a temporary error (timeout, network, etc.)
-				if isTemporaryError(err) && attempt < maxRetries-1 {
-					logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
-						attempt+1, sub, jti, err)
-					time.Sleep(10 * time.Millisecond) // Small backoff
-					continue
-				}
-				// Non-retryable error or max retries reached
-				return nil, err
-			}
-
-			// Check rotate result - these are business errors (non-retryable)
-			switch rot.Code {
-			case dao.RotateCodeOldNotFound:
-				return nil, ErrRefreshNotFound
-			case dao.RotateCodeMismatch:
-				return nil, ErrUserMismatch
-			case dao.RotateCodeReused:
-				return nil, ErrRefreshReused
-			case dao.RotateCodeOK:
-				// Success - generate tokens
-			default:
-				return nil, ErrUnknown
-			}
-
-			// Generate new tokens
-			access, accessExpireSeconds, err := tokenHelper.SignAccess(sub, newAccessJti)
-			if err != nil {
-				return nil, err
-			}
-			newRefresh, _, err := tokenHelper.SignRefresh(sub, newRefreshJti)
-			if err != nil {
-				return nil, err
-			}
-
-			return &auth.LoginResp{
-				AccessToken:  access,
-				RefreshToken: newRefresh,
-				ExpiresIn:    accessExpireSeconds,
-				TokenType:    "bearer",
-			}, nil
-		}
-		return nil, lastErr
+		return l.executeRefreshWithRetry(jti, username)
 	})
 
 	if runErr != nil {
-		// Classify errors for observability
-		isBusinessError := errors.Is(runErr, ErrRefreshNotFound) ||
-			errors.Is(runErr, ErrUserMismatch) ||
-			errors.Is(runErr, ErrRefreshReused)
-
-		if isBusinessError {
-			// Deterministic business failure - don't forget, just log
-			logx.WithContext(l.ctx).Infof("refresh-business-error user=%s jti=%s err=%v", sub, jti, runErr)
-		} else {
-			// Temporary/infrastructure error - forget to allow retry
-			l.svcCtx.RfGroup.Forget(jti)
-			logx.WithContext(l.ctx).Errorf("refresh-infra-error user=%s jti=%s err=%v (forgotten)", sub, jti, runErr)
-		}
+		l.handleRefreshError(username, jti, runErr)
 		return nil, runErr
 	}
+
 	return resAny.(*auth.LoginResp), nil
+}
+
+// executeRefreshWithRetry executes the refresh operation with retry logic
+func (l *RefreshLogic) executeRefreshWithRetry(jti, username string) (*auth.LoginResp, error) {
+	const maxRetries = 2
+	const redisTimeout = 150 * time.Millisecond
+
+	cfg := l.svcCtx.Config.JwtAuth
+	var lastErr error
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		// Create short timeout context for Redis operation
+		timeoutCtx, cancel := context.WithTimeout(l.ctx, redisTimeout)
+
+		// Generate new JTIs
+		newRefreshJti := uuid.NewString()
+		newAccessJti := uuid.NewString()
+
+		// Execute Redis rotation with timeout
+		rot, err := dao.RefreshRotate(
+			timeoutCtx,
+			l.svcCtx.Redis,
+			l.svcCtx.Key,
+			jti,
+			newRefreshJti,
+			username,
+			int(cfg.RefreshExpireSeconds),
+		)
+		cancel()
+
+		if err != nil {
+			lastErr = err
+			// Check if it's a temporary error (timeout, network, etc.)
+			if isTemporaryError(err) && attempt < maxRetries-1 {
+				logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
+					attempt+1, username, jti, err)
+				time.Sleep(10 * time.Millisecond) // Small backoff
+				continue
+			}
+			// Non-retryable error or max retries reached
+			return nil, err
+		}
+
+		// Check rotate result - these are business errors (non-retryable)
+		switch rot.Code {
+		case dao.RotateCodeOldNotFound:
+			return nil, ErrRefreshNotFound
+		case dao.RotateCodeMismatch:
+			return nil, ErrUserMismatch
+		case dao.RotateCodeReused:
+			return nil, ErrRefreshReused
+		case dao.RotateCodeOK:
+			// Success - generate tokens
+		default:
+			return nil, ErrUnknown
+		}
+
+		// Generate new token pair
+		return l.generateTokenPair(username, newAccessJti, newRefreshJti)
+	}
+
+	return nil, lastErr
+}
+
+// handleRefreshError classifies and logs refresh errors
+func (l *RefreshLogic) handleRefreshError(username, jti string, err error) {
+	isBusinessError := errors.Is(err, ErrRefreshNotFound) ||
+		errors.Is(err, ErrUserMismatch) ||
+		errors.Is(err, ErrRefreshReused)
+
+	if isBusinessError {
+		// Deterministic business failure - don't forget, just log
+		logx.WithContext(l.ctx).Infof("refresh-business-error user=%s jti=%s err=%v", username, jti, err)
+	} else {
+		// Temporary/infrastructure error - forget to allow retry
+		l.svcCtx.RfGroup.Forget(jti)
+		logx.WithContext(l.ctx).Errorf("refresh-infra-error user=%s jti=%s err=%v (forgotten)", username, jti, err)
+	}
 }
 
 // isTemporaryError checks if an error is temporary and retryable

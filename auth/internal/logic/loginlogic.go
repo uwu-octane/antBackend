@@ -58,6 +58,20 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 		return nil, err
 	}
 
+	sid := uuid.NewString()
+	//* user->sid
+	if _, err := l.svcCtx.Redis.Sadd(util.UserSidsKey(l.svcCtx.Key, userID), sid); err != nil {
+		return nil, err
+	}
+	//* sid->jit put the first refresh jti in to the sid collection
+	if _, err := l.svcCtx.Redis.Sadd(util.SidSetKey(l.svcCtx.Key, sid), refreshJti); err != nil {
+		return nil, err
+	}
+	//* jti ->sid (index of jti to sid)
+	if _, err := l.svcCtx.Redis.Sadd(util.JtiSidKey(l.svcCtx.Key, accessJti), sid); err != nil {
+		return nil, err
+	}
+
 	//* Redis：auth:refresh:<jti> = userID（Or JSON），TTL=RefreshExpireSeconds
 	key := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, refreshJti)
 	if err := l.svcCtx.Redis.Setex(key, userID, int(refreshExpireSeconds)); err != nil {

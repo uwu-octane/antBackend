@@ -37,3 +37,13 @@ func (s *AuthServiceServer) Refresh(ctx context.Context, in *auth.RefreshReq) (*
 	l := logic.NewRefreshLogic(ctx, s.svcCtx)
 	return l.Refresh(in)
 }
+
+func (s *AuthServiceServer) Logout(ctx context.Context, in *auth.LogoutReq) (*auth.LogoutResp, error) {
+	l := logic.NewLogoutLogic(ctx, s.svcCtx)
+	return l.Logout(in)
+}
+
+func (s *AuthServiceServer) LogoutAll(ctx context.Context, in *auth.LogoutAllReq) (*auth.LogoutResp, error) {
+	l := logic.NewLogoutAllLogic(ctx, s.svcCtx)
+	return l.LogoutAll(in)
+}
