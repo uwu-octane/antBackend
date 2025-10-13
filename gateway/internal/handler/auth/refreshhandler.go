@@ -20,6 +20,7 @@ func RefreshHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
+
 		l := auth.NewRefreshLogic(r.Context(), svcCtx)
 		resp, err := l.Refresh(&req)
 		if err != nil {
