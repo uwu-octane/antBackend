@@ -18,6 +18,19 @@ type LoginResp struct {
 	TokenType    string `json:"token_type"`
 }
 
+type LogoutAllReq struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type LogoutReq struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type LogoutResp struct {
+	Ok      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
 type MeResp struct {
 	Uid string `json:"uid"`
 	Jti string `json:"jti"`

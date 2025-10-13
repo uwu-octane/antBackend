@@ -30,6 +30,16 @@ type (
 		Iat int64  `json:"iat"`
 	}
 	EmptyResp  {}
+	LogoutResp {
+		Ok      bool   `json:"ok"`
+		Message string `json:"message"`
+	}
+	LogoutReq {
+		RefreshToken string `json:"refresh_token"`
+	}
+	LogoutAllReq {
+		RefreshToken string `json:"refresh_token"`
+	}
 )
 
 @server (
@@ -51,5 +61,11 @@ service gateway {
 
 	@handler Me
 	get /me returns (MeResp)
+
+	@handler Logout
+	post /logout (LogoutReq) returns (LogoutResp)
+
+	@handler LogoutAll
+	post /logout-all (LogoutAllReq) returns (LogoutResp)
 }
 
