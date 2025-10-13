@@ -8,7 +8,7 @@ Etcd:
   Key: auth.rpc
 
 JwtAuth:
-  Secret: "dev_secret"
+  Secret: ${JWT_SECRET}
   AccessExpireSeconds: 3600
   RefreshExpireSeconds: 604800
 

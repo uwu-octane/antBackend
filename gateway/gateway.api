@@ -34,7 +34,7 @@ type (
 
 @server (
 	prefix: /api/v1
-	group:  api
+	group:  auth
 )
 service gateway {
 	@handler Ping

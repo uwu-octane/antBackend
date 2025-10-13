@@ -1,11 +1,12 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.9.1
 
-package api
+package auth
 
 import (
 	"context"
 
+	"github.com/uwu-octane/antBackend/auth/authservice"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 
@@ -27,7 +28,19 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err error) {
-	// todo: add your logic here and delete this line
+	r, err := l.svcCtx.AuthRpc.Login(l.ctx, &authservice.LoginReq{
+		Username: req.Username,
+		Password: req.Password,
+	})
+	if err != nil {
+		//todo grpc->http error code mapping
+		return nil, err
+	}
 
-	return
+	return &types.LoginResp{
+		AccessToken:  r.AccessToken,
+		RefreshToken: r.RefreshToken,
+		ExpiresIn:    r.ExpiresIn,
+		TokenType:    r.TokenType,
+	}, nil
 }

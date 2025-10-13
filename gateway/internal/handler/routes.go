@@ -6,7 +6,7 @@ package handler
 import (
 	"net/http"
 
-	api "github.com/uwu-octane/antBackend/gateway/internal/handler/api"
+	auth "github.com/uwu-octane/antBackend/gateway/internal/handler/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -18,27 +18,27 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				Method:  http.MethodPost,
 				Path:    "/login",
-				Handler: api.LoginHandler(serverCtx),
+				Handler: auth.LoginHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodGet,
 				Path:    "/me",
-				Handler: api.MeHandler(serverCtx),
+				Handler: auth.MeHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodGet,
 				Path:    "/ping",
-				Handler: api.PingHandler(serverCtx),
+				Handler: auth.PingHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodPost,
 				Path:    "/refresh",
-				Handler: api.RefreshHandler(serverCtx),
+				Handler: auth.RefreshHandler(serverCtx),
 			},
 			{
 				Method:  http.MethodGet,
 				Path:    "/user/info",
-				Handler: api.GetUserInfoHandler(serverCtx),
+				Handler: auth.GetUserInfoHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/api/v1"),
