@@ -6,6 +6,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/uwu-octane/antBackend/gateway/internal/grpcerr"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/zeromicro/go-zero/rest/httpx"
@@ -16,7 +17,8 @@ func GetUserInfoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := auth.NewGetUserInfoLogic(r.Context(), svcCtx)
 		resp, err := l.GetUserInfo()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			grpcerr.WriteGrpcError(r, w, err)
+			return
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}

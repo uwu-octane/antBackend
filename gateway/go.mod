@@ -3,6 +3,7 @@ module github.com/uwu-octane/antBackend/gateway
 go 1.25.2
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/uwu-octane/antBackend/auth v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0

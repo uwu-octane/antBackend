@@ -6,6 +6,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/uwu-octane/antBackend/gateway/internal/grpcerr"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
@@ -23,7 +24,8 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := auth.NewLoginLogic(r.Context(), svcCtx)
 		resp, err := l.Login(&req)
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			grpcerr.WriteGrpcError(r, w, err)
+			return
 		} else {
 			httpx.OkJsonCtx(r.Context(), w, resp)
 		}
