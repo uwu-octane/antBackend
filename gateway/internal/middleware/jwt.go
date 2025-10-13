@@ -4,7 +4,9 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 )
 
@@ -22,11 +24,21 @@ func NewJwt(svcCtx *svc.ServiceContext) *Jwt {
 // Consumers can use TokenFromContext to read the token injected by this middleware.
 type ctxKey string
 
-const ctxKeyToken ctxKey = "jwtToken"
+const (
+	ctxKeyToken ctxKey = "jwtToken"
+	ctxUID      ctxKey = "uid"
+	ctxJTI      ctxKey = "jti"
+	ctxIAT      ctxKey = "iat"
+)
 
 func TokenFromContext(ctx context.Context) string {
 	val, _ := ctx.Value(ctxKeyToken).(string)
 	return val
+}
+
+type accessCalims struct {
+	TokenType string `json:"token_type"`
+	jwt.RegisteredClaims
 }
 
 func (m *Jwt) Handle(next http.HandlerFunc) http.HandlerFunc {
@@ -39,8 +51,8 @@ func (m *Jwt) Handle(next http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 
-		token := m.lookupToken(r)
-		if token == "" {
+		tokenStr := m.lookupToken(r)
+		if tokenStr == "" {
 			if m.svcCtx.Config.Auth.Strict {
 				http.Error(w, "missing or invalid token", http.StatusUnauthorized)
 				return
@@ -50,8 +62,37 @@ func (m *Jwt) Handle(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Attach token to request context for downstream usage
-		ctx := context.WithValue(r.Context(), ctxKeyToken, token)
+		parser := jwt.NewParser(
+			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
+			jwt.WithIssuer(m.svcCtx.Config.JwtAuth.Issuer),
+			jwt.WithLeeway(time.Duration(m.svcCtx.Config.JwtAuth.LeewaySeconds)*time.Second),
+		)
+		var accessClaims accessCalims
+		token, err := parser.ParseWithClaims(tokenStr, &accessClaims, func(token *jwt.Token) (any, error) {
+			return []byte(m.svcCtx.Config.JwtAuth.Secret), nil
+		})
+		if err != nil || !token.Valid {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return
+		}
+
+		if accessClaims.TokenType != "access" {
+			http.Error(w, "wrong token type", http.StatusUnauthorized)
+			return
+		}
+
+		if accessClaims.Subject == "" || accessClaims.ID == "" {
+			http.Error(w, "missing subject or id", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), ctxKeyToken, tokenStr)
+		ctx = context.WithValue(ctx, ctxUID, accessClaims.Subject)
+		ctx = context.WithValue(ctx, ctxJTI, accessClaims.ID)
+		if accessClaims.IssuedAt != nil {
+			ctx = context.WithValue(ctx, ctxIAT, accessClaims.IssuedAt.Unix())
+		}
+
 		next(w, r.WithContext(ctx))
 	}
 }

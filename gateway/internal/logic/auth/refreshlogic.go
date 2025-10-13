@@ -1,11 +1,12 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.9.1
 
-package api
+package auth
 
 import (
 	"context"
 
+	"github.com/uwu-octane/antBackend/auth/authservice"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 
@@ -27,7 +28,16 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 }
 
 func (l *RefreshLogic) Refresh(req *types.RefreshReq) (resp *types.LoginResp, err error) {
-	// todo: add your logic here and delete this line
-
-	return
+	r, err := l.svcCtx.AuthRpc.Refresh(l.ctx, &authservice.RefreshReq{
+		RefreshToken: req.RefreshToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &types.LoginResp{
+		AccessToken:  r.AccessToken,
+		RefreshToken: r.RefreshToken,
+		ExpiresIn:    r.ExpiresIn,
+		TokenType:    r.TokenType,
+	}, nil
 }
