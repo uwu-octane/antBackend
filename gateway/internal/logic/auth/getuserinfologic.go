@@ -1,11 +1,7 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.9.1
 
-<<<<<<<< HEAD:gateway/internal/logic/api/getuserinfologic.go
-package api
-========
 package auth
->>>>>>>> integrationAuth:gateway/internal/logic/auth/getuserinfologic.go
 
 import (
 	"context"
