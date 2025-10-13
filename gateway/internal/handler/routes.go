@@ -21,6 +21,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: auth.LoginHandler(serverCtx),
 			},
 			{
+				Method:  http.MethodPost,
+				Path:    "/logout",
+				Handler: auth.LogoutHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/logout-all",
+				Handler: auth.LogoutAllHandler(serverCtx),
+			},
+			{
 				Method:  http.MethodGet,
 				Path:    "/me",
 				Handler: auth.MeHandler(serverCtx),
