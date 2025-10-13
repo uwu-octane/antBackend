@@ -15,31 +15,31 @@ import (
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
-		{
-			Method:  http.MethodPost,
-			Path:    "/login",
-			Handler: auth.LoginHandler(serverCtx),
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/me",
-			Handler: auth.MeHandler(serverCtx),
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/ping",
-			Handler: auth.PingHandler(serverCtx),
-		},
-		{
-			Method:  http.MethodPost,
-			Path:    "/refresh",
-			Handler: auth.RefreshHandler(serverCtx),
-		},
-		{
-			Method:  http.MethodGet,
-			Path:    "/user/info",
-			Handler: auth.GetUserInfoHandler(serverCtx),
-		},
+			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: auth.LoginHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/me",
+				Handler: auth.MeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/ping",
+				Handler: auth.PingHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/refresh",
+				Handler: auth.RefreshHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/user/info",
+				Handler: auth.GetUserInfoHandler(serverCtx),
+			},
 		},
 		rest.WithPrefix("/api/v1"),
 	)
