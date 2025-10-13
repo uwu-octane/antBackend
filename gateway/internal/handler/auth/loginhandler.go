@@ -5,11 +5,15 @@ package auth
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/uwu-octane/antBackend/gateway/internal/grpcerr"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
+	"github.com/uwu-octane/antBackend/gateway/util"
+	"github.com/zeromicro/go-zero/core/limit"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
@@ -19,6 +23,28 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
+		}
+
+		// limit login attempts
+		if limiter := svcCtx.LoginLimiter; limiter != nil && svcCtx.Config.RateLimit.Enable {
+			key := util.MakeLoginLimitKey(svcCtx.Config.RateLimit.By, req.Username, util.ClientIP(r))
+			code, err := limiter.TakeCtx(r.Context(), key)
+			if err != nil {
+				logx.WithContext(r.Context()).Errorf("rate limit check failed: %v", err)
+				httpx.WriteJsonCtx(r.Context(), w, http.StatusTooManyRequests, map[string]any{
+					"message": "rate limit check failed",
+				})
+				return
+			}
+			if code == limit.OverQuota {
+				retryAfter := svcCtx.Config.RateLimit.WindowSeconds
+				w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
+				httpx.WriteJsonCtx(r.Context(), w, http.StatusTooManyRequests, map[string]any{
+					"message":     "too many login attempts",
+					"retry_after": retryAfter,
+				})
+				return
+			}
 		}
 
 		l := auth.NewLoginLogic(r.Context(), svcCtx)

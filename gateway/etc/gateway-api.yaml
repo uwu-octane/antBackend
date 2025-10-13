@@ -45,3 +45,16 @@ JwtAuth:
   Secret: ${JWT_SECRET}
   Issuer: "auth.rpc"
   LeewaySeconds: 2
+
+RateLimit:
+  Enable: true
+  WindowSeconds: 60
+  MaxAttempts: 10
+  By: "ip+username"
+  RateLimitRedis:
+    Host: ${REDIS_HOST}
+    Pass: "${REDIS_PASSWORD}"
+    Type: node
+    Key: ratelimit
+    Tls: false
+    NonBlock: true
