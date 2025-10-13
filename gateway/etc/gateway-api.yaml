@@ -38,6 +38,8 @@ Auth:
     - /api/v1/ping
     - /api/v1/login
     - /api/v1/refresh
+    - /api/v1/logout
+    - /api/v1/logout-all
 
 JwtAuth:
   Secret: ${JWT_SECRET}
