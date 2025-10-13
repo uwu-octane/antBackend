@@ -16,7 +16,7 @@ Log:
   Level: info
 
 AuthRpc:
-  Endpoint: localhost:7778
+  Endpoint: localhost:7777
   Etcd:
     Hosts:
       - ${ETCD_HOST}
@@ -38,3 +38,10 @@ Auth:
     - /api/v1/ping
     - /api/v1/login
     - /api/v1/refresh
+    - /api/v1/logout
+    - /api/v1/logout-all
+
+JwtAuth:
+  Secret: ${JWT_SECRET}
+  Issuer: "auth.rpc"
+  LeewaySeconds: 2

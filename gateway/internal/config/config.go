@@ -13,6 +13,7 @@ type Config struct {
 	AuthRpc zrpc.RpcClientConf `json:"AuthRpc"`
 	UserRpc zrpc.RpcClientConf `json:"UserRpc"`
 	Auth    AuthConfig         `json:"Auth"`
+	JwtAuth JwtAuthConfig      `json:"JwtAuth"`
 
 	Cors               []string `json:"Cors"`
 	ApiPrefix          []string `json:"ApiPrefix"`
@@ -23,4 +24,10 @@ type AuthConfig struct {
 	Strict       bool
 	TokenLookup  string
 	IgnoreRoutes []string
+}
+
+type JwtAuthConfig struct {
+	Secret        string
+	Issuer        string
+	LeewaySeconds int64
 }

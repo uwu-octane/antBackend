@@ -1,7 +1,7 @@
 // Code scaffolded by goctl. Safe to edit.
 // goctl 1.9.1
 
-package api
+package auth
 
 import (
 	"context"
