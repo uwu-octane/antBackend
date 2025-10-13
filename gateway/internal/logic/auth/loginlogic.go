@@ -33,7 +33,6 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 		Password: req.Password,
 	})
 	if err != nil {
-		//todo grpc->http error code mapping
 		return nil, err
 	}
 
