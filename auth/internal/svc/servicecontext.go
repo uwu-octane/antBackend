@@ -24,8 +24,8 @@ type ServiceContext struct {
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	redis := redis.MustNewRedis(c.AuthRedis.RedisConf)
-	master := sqlx.NewSqlConn(c.Database.Driver, c.Database.MasterDSN)
-	replica := sqlx.NewSqlConn(c.Database.Driver, c.Database.ReplicaDSN)
+	master := sqlx.NewSqlConn(c.AuthDatabase.Driver, c.AuthDatabase.MasterDSN)
+	replica := sqlx.NewSqlConn(c.AuthDatabase.Driver, c.AuthDatabase.ReplicaDSN)
 
 	return &ServiceContext{
 		Config:      c,

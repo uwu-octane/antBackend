@@ -13,9 +13,9 @@ type JwtAuthConfig struct {
 
 type Config struct {
 	zrpc.RpcServerConf
-	JwtAuth   JwtAuthConfig
-	AuthRedis redis.RedisKeyConf
-	Database  DatabaseConfig
+	JwtAuth      JwtAuthConfig
+	AuthRedis    redis.RedisKeyConf
+	AuthDatabase DatabaseConfig
 }
 
 type DatabaseConfig struct {

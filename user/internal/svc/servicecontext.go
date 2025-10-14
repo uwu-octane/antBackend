@@ -14,8 +14,8 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
-	master := sqlx.NewSqlConn(c.Database.Driver, c.Database.MasterDSN)
-	replica := sqlx.NewSqlConn(c.Database.Driver, c.Database.ReplicaDSN)
+	master := sqlx.NewSqlConn(c.UserDatabase.Driver, c.UserDatabase.MasterDSN)
+	replica := sqlx.NewSqlConn(c.UserDatabase.Driver, c.UserDatabase.ReplicaDSN)
 	users := model.NewUsersModel(replica, master)
 	return &ServiceContext{
 		Config:  c,

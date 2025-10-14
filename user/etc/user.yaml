@@ -1,16 +1,11 @@
 Name: user.rpc
-ListenOn: 0.0.0.0:8080
+ListenOn: 0.0.0.0:7778
 Etcd:
   Hosts:
   - 127.0.0.1:2379
   Key: user.rpc
 
-
-Log:
-  Encoding: json
-  Level: info
-
-Database:
+UserDatabase:
   Driver: postgres
   MasterDSN: "${PG_MASTER_URL}"
   ReplicaDSN: "${PG_REPLICA_URL}"

@@ -5,6 +5,7 @@ go 1.25.2
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
+	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/uwu-octane/antBackend/auth v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0
 	github.com/uwu-octane/antBackend/user v0.0.0
@@ -61,7 +62,6 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/redis/go-redis/v9 v9.15.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/uwu-octane/antBackend/api v0.0.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.15 // indirect

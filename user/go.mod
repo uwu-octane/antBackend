@@ -3,6 +3,7 @@ module github.com/uwu-octane/antBackend/user
 go 1.25.2
 
 require (
+	github.com/lib/pq v1.10.9
 	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/zeromicro/go-zero v1.9.1
 	google.golang.org/grpc v1.65.0
