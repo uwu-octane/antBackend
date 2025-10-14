@@ -4,3 +4,21 @@ Etcd:
   Hosts:
   - 127.0.0.1:2379
   Key: user.rpc
+
+
+Log:
+  Encoding: json
+  Level: info
+
+Database:
+  Driver: postgres
+  MasterDSN: "${PG_MASTER_URL}"
+  ReplicaDSN: "${PG_REPLICA_URL}"
+
+UserRedis:
+  Host: "${REDIS_HOST}"
+  Pass: "${REDIS_PASSWORD}"
+  Type: "node"
+  Key: "user:"
+  Tls: false
+  NonBlock: true 

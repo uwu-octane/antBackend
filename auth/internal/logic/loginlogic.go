@@ -2,7 +2,6 @@ package logic
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 	"github.com/uwu-octane/antBackend/api/v1/auth"
@@ -10,6 +9,8 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/util"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type LoginLogic struct {
@@ -29,12 +30,14 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	//dev only
 	if in.GetUsername() == "" || in.GetPassword() == "" {
-		return nil, errors.New("username and password are required")
+		return nil, status.Error(codes.InvalidArgument, "username and password are required")
 	}
 
 	//todo: call user rpc, then replace with userID
 	if in.GetUsername() != "admin" || in.GetPassword() != "admin" {
-		return nil, errors.New("invalid credentials")
+		err := status.Error(codes.Unauthenticated, "invalid credentials")
+		l.Infof("Login failed for user %s, returning error code: %v", in.GetUsername(), status.Code(err))
+		return nil, err
 	}
 	userID := in.GetUsername()
 

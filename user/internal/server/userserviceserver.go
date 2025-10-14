@@ -27,3 +27,8 @@ func (s *UserServiceServer) Ping(ctx context.Context, in *user.PingReq) (*user.P
 	l := logic.NewPingLogic(ctx, s.svcCtx)
 	return l.Ping(in)
 }
+
+func (s *UserServiceServer) GetUserInfo(ctx context.Context, in *user.GetUserInfoReq) (*user.GetUserInfoResp, error) {
+	l := logic.NewGetUserInfoLogic(ctx, s.svcCtx)
+	return l.GetUserInfo(in)
+}
