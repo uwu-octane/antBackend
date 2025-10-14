@@ -81,5 +81,6 @@ BUGFIX_SUMMARY.md
 done.txt
 todo.txt
 go.work.sum
+**/go.sum
 go.sum
 test_ratelimit.sh

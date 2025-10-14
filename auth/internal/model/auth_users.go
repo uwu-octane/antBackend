@@ -10,6 +10,7 @@ import (
 
 type AuthUsers struct {
 	Id           string         `db:"id"`
+	Username     sql.NullString `db:"username"`
 	Email        string         `db:"email"`
 	PasswordHash string         `db:"password_hash"`
 	PasswordAlgo sql.NullString `db:"password_algo"`
@@ -34,7 +35,7 @@ func NewAuthUsersModel(replica sqlx.SqlConn, master sqlx.SqlConn) *defaultAuthUs
 	}
 }
 
-const authUsersFields = "id, email, password_hash, password_algo, created_at, updated_at"
+const authUsersFields = "id, username, email, password_hash, password_algo, created_at, updated_at"
 
 func (m *defaultAuthUsersModel) FindByEmail(ctx context.Context, email string) (*AuthUsers, error) {
 	var user AuthUsers

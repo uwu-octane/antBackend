@@ -14,6 +14,8 @@ import (
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 var configFile = flag.String("f", "etc/user.yaml", "the config file")

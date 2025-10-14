@@ -7,18 +7,12 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	Log       LogConfig
-	Database  DatabaseConfig
-	UserRedis redis.RedisKeyConf
-}
-
-type LogConfig struct {
-	Encoding string `json:"Encoding"`
-	Level    string `json:"Level"`
+	UserDatabase DatabaseConfig
+	UserRedis    redis.RedisKeyConf
 }
 
 type DatabaseConfig struct {
-	Driver     string `json:"Driver"`
-	MasterDSN  string `json:"MasterDSN"`
-	ReplicaDSN string `json:"ReplicaDSN"`
+	Driver     string
+	MasterDSN  string
+	ReplicaDSN string
 }
