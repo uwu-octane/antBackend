@@ -10,6 +10,7 @@ require (
 	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0
 	github.com/zeromicro/go-zero v1.9.1
+	golang.org/x/crypto v0.33.0
 	golang.org/x/sync v0.17.0
 	google.golang.org/grpc v1.65.0
 )
@@ -19,6 +20,7 @@ replace github.com/uwu-octane/antBackend/api => ../api
 replace github.com/uwu-octane/antBackend/common => ../common
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -33,6 +35,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.4 // indirect
+	github.com/go-sql-driver/mysql v1.9.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect

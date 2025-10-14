@@ -2,28 +2,39 @@ package svc
 
 import (
 	"github.com/uwu-octane/antBackend/auth/internal/config"
+	"github.com/uwu-octane/antBackend/auth/internal/model"
 	"github.com/uwu-octane/antBackend/auth/internal/util"
 	"github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"golang.org/x/sync/singleflight"
 )
 
 type ServiceContext struct {
-	Config config.Config
-	Redis  *redis.Redis
-	Key    string
+	Config  config.Config
+	Redis   *redis.Redis
+	Key     string
+	Master  sqlx.SqlConn
+	Replica sqlx.SqlConn
 
 	RfGroup     *singleflight.Group
 	TokenHelper *util.TokenHelper
+
+	AuthUsers model.AuthUsersModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	redis := redis.MustNewRedis(c.AuthRedis.RedisConf)
+	master := sqlx.NewSqlConn(c.Database.Driver, c.Database.MasterDSN)
+	replica := sqlx.NewSqlConn(c.Database.Driver, c.Database.ReplicaDSN)
 
 	return &ServiceContext{
 		Config:      c,
 		Redis:       redis,
 		Key:         c.AuthRedis.Key,
+		Master:      master,
+		Replica:     replica,
 		RfGroup:     &singleflight.Group{},
 		TokenHelper: util.CreateTokenHelper(c.JwtAuth),
+		AuthUsers:   model.NewAuthUsersModel(replica, master),
 	}
 }

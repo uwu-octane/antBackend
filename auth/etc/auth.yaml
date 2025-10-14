@@ -19,4 +19,9 @@ AuthRedis:
   Key: "auth:"
   Tls: false
   NonBlock: true 
+
+Database:
+  Driver: postgres
+  MasterDSN: "${PG_MASTER_URL}"
+  ReplicaDSN: "${PG_REPLICA_URL}"
   

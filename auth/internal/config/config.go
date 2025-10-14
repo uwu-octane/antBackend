@@ -6,13 +6,20 @@ import (
 )
 
 type JwtAuthConfig struct {
-	Secret               string `json:",optional"`
-	AccessExpireSeconds  int64  `json:",default=3600"`
-	RefreshExpireSeconds int64  `json:",default=604800"`
+	Secret               string
+	AccessExpireSeconds  int64
+	RefreshExpireSeconds int64
 }
 
 type Config struct {
 	zrpc.RpcServerConf
 	JwtAuth   JwtAuthConfig
 	AuthRedis redis.RedisKeyConf
+	Database  DatabaseConfig
+}
+
+type DatabaseConfig struct {
+	Driver     string
+	MasterDSN  string
+	ReplicaDSN string
 }
