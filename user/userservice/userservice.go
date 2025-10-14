@@ -14,11 +14,14 @@ import (
 )
 
 type (
-	PingReq  = user.PingReq
-	PingResp = user.PingResp
+	GetUserInfoReq  = user.GetUserInfoReq
+	GetUserInfoResp = user.GetUserInfoResp
+	PingReq         = user.PingReq
+	PingResp        = user.PingResp
 
 	UserService interface {
 		Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PingResp, error)
+		GetUserInfo(ctx context.Context, in *GetUserInfoReq, opts ...grpc.CallOption) (*GetUserInfoResp, error)
 	}
 
 	defaultUserService struct {
@@ -35,4 +38,9 @@ func NewUserService(cli zrpc.Client) UserService {
 func (m *defaultUserService) Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PingResp, error) {
 	client := user.NewUserServiceClient(m.cli.Conn())
 	return client.Ping(ctx, in, opts...)
+}
+
+func (m *defaultUserService) GetUserInfo(ctx context.Context, in *GetUserInfoReq, opts ...grpc.CallOption) (*GetUserInfoResp, error) {
+	client := user.NewUserServiceClient(m.cli.Conn())
+	return client.GetUserInfo(ctx, in, opts...)
 }
