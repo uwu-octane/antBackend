@@ -5,7 +5,20 @@ option go_package = "github.com/uwu-octane/antBackend/api/v1/user";
 
 service UserService {
   rpc Ping(PingReq) returns (PingResp);
+  rpc GetUserInfo(GetUserInfoReq) returns (GetUserInfoResp);
 }
 
 message PingReq {}
 message PingResp {}
+
+message GetUserInfoReq {
+  string user_id = 1;
+}
+
+message GetUserInfoResp {
+  string user_id = 1;
+  string username = 2;
+  string email = 3;
+  string display_name = 4;
+  string avatar_url = 5;
+}
