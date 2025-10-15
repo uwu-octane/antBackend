@@ -7,10 +7,12 @@ import (
 )
 
 type ServiceContext struct {
-	Config  config.Config
-	Master  sqlx.SqlConn
-	Replica sqlx.SqlConn
-	Users   model.UserModel
+	Config                      config.Config
+	Master                      sqlx.SqlConn
+	Replica                     sqlx.SqlConn
+	ReadFromReplica             bool
+	FallbackToMasterOnReadError bool
+	Users                       model.UserModel
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -18,9 +20,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	replica := sqlx.NewSqlConn(c.UserDatabase.Driver, c.UserDatabase.ReplicaDSN)
 	users := model.NewUsersModel(replica, master)
 	return &ServiceContext{
-		Config:  c,
-		Master:  master,
-		Replica: replica,
-		Users:   users,
+		Config:                      c,
+		Master:                      master,
+		Replica:                     replica,
+		ReadFromReplica:             c.UserReadStrategy.FromReplica,
+		FallbackToMasterOnReadError: c.UserReadStrategy.FallbackToMasterOnReadError,
+		Users:                       users,
 	}
 }

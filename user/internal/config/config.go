@@ -7,12 +7,18 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
-	UserDatabase DatabaseConfig
-	UserRedis    redis.RedisKeyConf
+	UserDatabase     UserDatabase
+	UserRedis        redis.RedisKeyConf
+	UserReadStrategy UserReadStrategy
 }
 
-type DatabaseConfig struct {
+type UserDatabase struct {
 	Driver     string
 	MasterDSN  string
 	ReplicaDSN string
+}
+
+type UserReadStrategy struct {
+	FromReplica                 bool
+	FallbackToMasterOnReadError bool
 }

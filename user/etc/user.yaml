@@ -17,3 +17,7 @@ UserRedis:
   Key: "user:"
   Tls: false
   NonBlock: true 
+
+UserReadStrategy: 
+  FromReplica: true
+  FallbackToMasterOnReadError: true

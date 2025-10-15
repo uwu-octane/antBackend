@@ -25,3 +25,6 @@ AuthDatabase:
   MasterDSN: "${PG_MASTER_URL}"
   ReplicaDSN: "${PG_REPLICA_URL}"
   
+AuthReadStrategy: 
+  FromReplica: true
+  FallbackToMasterOnReadError: true

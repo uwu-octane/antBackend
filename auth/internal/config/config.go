@@ -13,13 +13,19 @@ type JwtAuthConfig struct {
 
 type Config struct {
 	zrpc.RpcServerConf
-	JwtAuth      JwtAuthConfig
-	AuthRedis    redis.RedisKeyConf
-	AuthDatabase DatabaseConfig
+	JwtAuth          JwtAuthConfig
+	AuthRedis        redis.RedisKeyConf
+	AuthDatabase     AuthDatabase
+	AuthReadStrategy AuthReadStrategy
 }
 
-type DatabaseConfig struct {
+type AuthDatabase struct {
 	Driver     string
 	MasterDSN  string
 	ReplicaDSN string
+}
+
+type AuthReadStrategy struct {
+	FromReplica                 bool
+	FallbackToMasterOnReadError bool
 }
