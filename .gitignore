@@ -83,4 +83,7 @@ todo.txt
 go.work.sum
 **/go.sum
 go.sum
-test_ratelimit.sh
+*.sh
+!common/db/master/init/02-pghba.sh
+!common/db/replica/init/10-replica-bootstrap.sh
+!common/db/start.sh

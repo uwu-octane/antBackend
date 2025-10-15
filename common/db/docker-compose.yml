@@ -1,0 +1,78 @@
+services:
+  pg-master:
+    image: postgres:17-alpine
+    container_name: pg-master
+    ports:
+      - 5433:5432
+    command: 
+      - "postgres"
+      - "-c"
+      - "wal_level=replica"
+      - "-c"
+      - "max_wal_senders=3"
+      - "-c"
+      - "max_replication_slots=3"
+      - "-c"
+      - "hot_standby=on"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_MASTER}
+      TZ: Europe/Berlin
+    volumes:
+      - pg-master-data:/var/lib/postgresql/data
+      - ./master/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME_MASTER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - ant-network
+
+  pg-replica:
+    image: postgres:17-alpine
+    container_name: pg-replica
+    depends_on:
+      pg-master:
+        condition: service_healthy
+    ports:
+      - 5434:5432
+    environment:
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      REPL_HOST: pg-master
+      REPL_PORT: 5432
+      REPL_USER: replicator
+      REPL_PASSWORD: repl_password
+      REPL_SLOT: phys_slot_1
+      TZ: Europe/Berlin
+    volumes:
+      - pg-replica-data:/var/lib/postgresql/data
+      - ./replica/init/10-replica-bootstrap.sh:/bootstrap.sh:ro
+    entrypoint: ["/bin/sh"]
+    command:
+      - "-c"
+      - |
+        echo "=== Starting Replica Container ==="
+        sh /bootstrap.sh
+        echo "=== Starting PostgreSQL as standby ==="
+        exec docker-entrypoint.sh postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    networks:
+      - ant-network
+
+volumes:
+  pg-master-data:
+  pg-replica-data:
+
+networks:
+  ant-network:
+    driver: bridge
