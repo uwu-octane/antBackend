@@ -10,11 +10,14 @@ import (
 )
 
 type ServiceContext struct {
-	Config  config.Config
-	Redis   *redis.Redis
-	Key     string
-	Master  sqlx.SqlConn
-	Replica sqlx.SqlConn
+	Config config.Config
+	Redis  *redis.Redis
+	Key    string
+
+	Master                      sqlx.SqlConn
+	Replica                     sqlx.SqlConn
+	ReadFromReplica             bool
+	FallbackToMasterOnReadError bool
 
 	RfGroup     *singleflight.Group
 	TokenHelper *util.TokenHelper
@@ -28,13 +31,15 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	replica := sqlx.NewSqlConn(c.AuthDatabase.Driver, c.AuthDatabase.ReplicaDSN)
 
 	return &ServiceContext{
-		Config:      c,
-		Redis:       redis,
-		Key:         c.AuthRedis.Key,
-		Master:      master,
-		Replica:     replica,
-		RfGroup:     &singleflight.Group{},
-		TokenHelper: util.CreateTokenHelper(c.JwtAuth),
-		AuthUsers:   model.NewAuthUsersModel(replica, master),
+		Config:                      c,
+		Redis:                       redis,
+		Key:                         c.AuthRedis.Key,
+		Master:                      master,
+		Replica:                     replica,
+		ReadFromReplica:             c.AuthReadStrategy.FromReplica,
+		FallbackToMasterOnReadError: c.AuthReadStrategy.FallbackToMasterOnReadError,
+		RfGroup:                     &singleflight.Group{},
+		TokenHelper:                 util.CreateTokenHelper(c.JwtAuth),
+		AuthUsers:                   model.NewAuthUsersModel(replica, master),
 	}
 }
