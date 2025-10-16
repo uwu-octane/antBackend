@@ -15,12 +15,13 @@ ifneq (,$(wildcard ../../../.env))
     export
 endif
 
-# 数据库连接配置
-DB_USER ?= postgres
-DB_PASSWORD ?= postgres_password
-DB_HOST ?= localhost
+# 主库端口：5433 (docker-compose.yml: 5433:5432)
+# 从库端口：5434 (docker-compose.yml: 5434:5432)
+DB_USER ?= ${DB_USER}
+DB_PASSWORD ?= ${DB_PASSWORD}
+DB_HOST ?= ${DB_HOST}
 DB_PORT ?= 5433
-DB_NAME ?= antdb_master
+DB_NAME ?= ${DB_NAME}
 
 # 主库 DSN 连接字符串
 PG_MASTER_DSN = postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
