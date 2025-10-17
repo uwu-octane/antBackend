@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/uwu-octane/antBackend/common/commonutil"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
@@ -24,14 +25,16 @@ type AuthUsersModel interface {
 }
 
 type defaultAuthUsersModel struct {
-	replica sqlx.SqlConn
-	master  sqlx.SqlConn
+	replica  sqlx.SqlConn
+	master   sqlx.SqlConn
+	selector *commonutil.Selector
 }
 
-func NewAuthUsersModel(replica sqlx.SqlConn, master sqlx.SqlConn) *defaultAuthUsersModel {
+func NewAuthUsersModel(replica sqlx.SqlConn, master sqlx.SqlConn, selector *commonutil.Selector) *defaultAuthUsersModel {
 	return &defaultAuthUsersModel{
-		replica: replica,
-		master:  master,
+		replica:  replica,
+		master:   master,
+		selector: selector,
 	}
 }
 
@@ -58,6 +61,25 @@ func (m *defaultAuthUsersModel) FindByUsername(ctx context.Context, username str
 			logx.WithContext(ctx).Errorf("auth user not found: %s", username)
 			return nil, err
 		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (m *defaultAuthUsersModel) FindOneByIDWithCallBack(ctx context.Context, id string) (*AuthUsers, error) {
+	var user AuthUsers
+	query := "SELECT " + authUsersFields + " FROM auth_users WHERE id = $1 LIMIT 1"
+
+	err := m.selector.Do(ctx, func(ctx context.Context, conn sqlx.SqlConn) error {
+		//idempotent
+		var u AuthUsers
+		if err := conn.QueryRowCtx(ctx, &u, query, id); err != nil {
+			return err
+		}
+		user = u
+		return nil
+	})
+	if err != nil {
 		return nil, err
 	}
 	return &user, nil
