@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/uwu-octane/antBackend/api/v1/auth"
 	"github.com/uwu-octane/antBackend/auth/internal/config"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq" // PostgreSQL driver
+	"github.com/zeromicro/zero-contrib/zrpc/registry/consul"
 )
 
 var configFile = flag.String("f", "etc/auth.yaml", "the config file")
@@ -27,7 +29,6 @@ func main() {
 	conf.MustLoad(*configFile, &c, conf.UseEnv())
 	ctx := svc.NewServiceContext(c)
 
-	fmt.Printf("[Boot] etcd = %s redis = %s\n", c.Etcd.Hosts, c.AuthRedis.Host)
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		auth.RegisterAuthServiceServer(grpcServer, server.NewAuthServiceServer(ctx))
 
@@ -35,6 +36,10 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+
+	if err := consul.RegisterService(c.ListenOn, c.Consul); err != nil {
+		log.Fatal(err)
+	}
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)

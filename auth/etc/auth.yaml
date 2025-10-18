@@ -1,11 +1,14 @@
 Name: auth.rpc
 ListenOn: 0.0.0.0:7777
 Mode: dev
-
-Etcd:
-  Hosts:
-  - ${ETCD_HOST}
+Consul: 
+  Host: ${CONSUL_HOST}
   Key: auth.rpc
+  Meta:
+    Protocol: grpc
+  Tag:
+    - rpc
+
 
 JwtAuth:
   Secret: ${JWT_SECRET}

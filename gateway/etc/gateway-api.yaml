@@ -17,18 +17,14 @@ Log:
 
 AuthRpc:
   Endpoint: localhost:7777
-  Etcd:
-    Hosts:
-      - ${ETCD_HOST}
-    Key: auth.rpc
+  Target: consul://${CONSUL_HOST}/auth.rpc?wait=14s
+  KeepAlive: true
   NonBlock: true # nonblock是go-zero的特性，用于非阻塞地调用远程服务
 
 UserRpc:
   Endpoint: localhost:7779
-  Etcd:
-    Hosts:
-      - ${ETCD_HOST}
-    Key: user.rpc
+  Target: consul://${CONSUL_HOST}/user.rpc?wait=14s
+  KeepAlive: true
   NonBlock: true 
 
 Auth:

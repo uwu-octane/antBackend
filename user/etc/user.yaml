@@ -1,9 +1,12 @@
 Name: user.rpc
 ListenOn: 0.0.0.0:7778
-Etcd:
-  Hosts:
-  - 127.0.0.1:2379
+Consul: 
+  Host: ${CONSUL_HOST}
   Key: user.rpc
+  Meta:
+    Protocol: grpc
+  Tag:
+    - rpc
 
 UserDatabase:
   Driver: postgres
