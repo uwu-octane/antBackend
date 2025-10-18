@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 
 	"github.com/uwu-octane/antBackend/api/v1/user"
 	"github.com/uwu-octane/antBackend/user/internal/config"
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/grpc/reflection"
 
 	_ "github.com/lib/pq" // PostgreSQL driver
+	"github.com/zeromicro/zero-contrib/zrpc/registry/consul"
 )
 
 var configFile = flag.String("f", "etc/user.yaml", "the config file")
@@ -34,6 +36,10 @@ func main() {
 			reflection.Register(grpcServer)
 		}
 	})
+
+	if err := consul.RegisterService(c.ListenOn, c.Consul); err != nil {
+		log.Fatal(err)
+	}
 	defer s.Stop()
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
