@@ -21,7 +21,7 @@ services:
       TZ: Europe/Berlin
     volumes:
       - pg-master-data:/var/lib/postgresql/data
-      - ./master/init:/docker-entrypoint-initdb.d:ro
+      - ./common/db/master/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"${DB_USER}\" -d \"${DB_NAME}\""]
       interval: 5s
@@ -53,7 +53,7 @@ services:
       TZ: Europe/Berlin
     volumes:
       - pg-replica-data:/var/lib/postgresql/data
-      - ./replica/init/10-replica-bootstrap.sh:/bootstrap.sh:ro
+      - ./common/db/replica/init/10-replica-bootstrap.sh:/bootstrap.sh:ro
     entrypoint: ["/bin/sh"]
     command:
       - "-c"
@@ -71,9 +71,35 @@ services:
     networks:
       - ant-network
 
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    command:
+      - "agent"
+      - "-dev"
+      - "-ui"
+      - "-client=0.0.0.0"
+      - "-dns-port=8600"
+    volumes:
+      - consul-data:/consul/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H 'Accept: application/json' http://127.0.0.1:8500/v1/status/leader | grep -q '\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks:
+      - ant-network
+
+
+
 volumes:
   pg-master-data:
   pg-replica-data:
+  consul-data:
 
 networks:
   ant-network:
