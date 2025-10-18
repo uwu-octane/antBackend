@@ -9,25 +9,30 @@ Consul:
   Tag:
     - rpc
 
+ConfigCenter:
+  Type: consul
+  Host: ${CONSUL_HOST}
+  Key: config/auth/auth.yaml
 
-JwtAuth:
-  Secret: ${JWT_SECRET}
-  AccessExpireSeconds: 3600
-  RefreshExpireSeconds: 604800
 
-AuthRedis:
-  Host: "${REDIS_HOST}"
-  Pass: "${REDIS_PASSWORD}"
-  Type: "node"
-  Key: "auth:"
-  Tls: false
-  NonBlock: true 
+# JwtAuth:
+#   Secret: ${JWT_SECRET}
+#   AccessExpireSeconds: 3600
+#   RefreshExpireSeconds: 604800
 
-AuthDatabase:
-  Driver: postgres
-  MasterDSN: "${PG_MASTER_URL}"
-  ReplicaDSN: "${PG_REPLICA_URL}"
+# AuthRedis:
+#   Host: "${REDIS_HOST}"
+#   Pass: "${REDIS_PASSWORD}"
+#   Type: "node"
+#   Key: "auth:"
+#   Tls: false
+#   NonBlock: true 
+
+# AuthDatabase:
+#   Driver: postgres
+#   MasterDSN: "${PG_MASTER_URL}"
+#   ReplicaDSN: "${PG_REPLICA_URL}"
   
-AuthReadStrategy: 
-  FromReplica: true
-  FallbackToMasterOnReadError: true
+# AuthReadStrategy: 
+#   FromReplica: true
+#   FallbackToMasterOnReadError: true

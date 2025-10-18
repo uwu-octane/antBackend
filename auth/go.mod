@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	github.com/uwu-octane/antBackend/api v0.0.0
 	github.com/uwu-octane/antBackend/common v0.0.0
-	github.com/zeromicro/go-zero v1.9.1
+	github.com/zeromicro/go-zero v1.9.2
 	github.com/zeromicro/zero-contrib/zrpc/registry/consul v0.0.0-20250809040225-5c1d3d09e28c
 	golang.org/x/crypto v0.33.0
 	golang.org/x/sync v0.17.0
