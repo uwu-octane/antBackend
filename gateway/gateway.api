@@ -19,10 +19,15 @@ type (
 	RefreshReq {
 		RefreshToken string `json:"refresh_token"`
 	}
+	// GetUserInfoReq {
+	//  UserId string `json:"user_id"`
+	// }
 	UserInfoResp {
-		UserId   int64  `json:"user_id"`
-		Username string `json:"username"`
-		Email    string `json:"email"`
+		UserId      string `json:"user_id"`
+		Username    string `json:"username"`
+		Email       string `json:"email"`
+		DisplayName string `json:"display_name"`
+		AvatarUrl   string `json:"avatar_url"`
 	}
 	MeResp {
 		Uid string `json:"uid"`
@@ -56,9 +61,6 @@ service gateway {
 	@handler Refresh
 	post /refresh (RefreshReq) returns (LoginResp)
 
-	@handler GetUserInfo
-	get /user/info returns (UserInfoResp)
-
 	@handler Me
 	get /me returns (MeResp)
 
@@ -67,5 +69,14 @@ service gateway {
 
 	@handler LogoutAll
 	post /logout-all (LogoutAllReq) returns (LogoutResp)
+}
+
+@server (
+	prefix: /api/v1
+	group:  user
+)
+service gateway {
+	@handler GetUserInfo
+	get /user/info returns (UserInfoResp)
 }
 

@@ -40,7 +40,7 @@ func NewTokenHelper(secret []byte, issuer string, accessTTL time.Duration, refre
 func CreateTokenHelper(cfg config.JwtAuthConfig) *TokenHelper {
 	return NewTokenHelper(
 		[]byte(cfg.Secret),
-		"auth.prc",
+		"auth.rpc",
 		time.Duration(cfg.AccessExpireSeconds)*time.Second,
 		time.Duration(cfg.RefreshExpireSeconds)*time.Second,
 	)

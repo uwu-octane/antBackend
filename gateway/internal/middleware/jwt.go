@@ -31,9 +31,24 @@ const (
 	ctxIAT      ctxKey = "iat"
 )
 
-func TokenFromContext(ctx context.Context) string {
-	val, _ := ctx.Value(ctxKeyToken).(string)
-	return val
+func TokenFromContext(ctx context.Context) (string, bool) {
+	val, ok := ctx.Value(ctxKeyToken).(string)
+	return val, ok && val != ""
+}
+
+func UIDFromContext(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(ctxUID).(string)
+	return v, ok && v != ""
+}
+
+func JTIFromContext(ctx context.Context) (string, bool) {
+	v, ok := ctx.Value(ctxJTI).(string)
+	return v, ok && v != ""
+}
+
+func IATFromContext(ctx context.Context) (int64, bool) {
+	v, ok := ctx.Value(ctxIAT).(int64)
+	return v, ok
 }
 
 type accessCalims struct {
@@ -64,12 +79,12 @@ func (m *Jwt) Handle(next http.HandlerFunc) http.HandlerFunc {
 
 		parser := jwt.NewParser(
 			jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Name}),
-			jwt.WithIssuer(m.svcCtx.Config.JwtAuth.Issuer),
-			jwt.WithLeeway(time.Duration(m.svcCtx.Config.JwtAuth.LeewaySeconds)*time.Second),
+			jwt.WithIssuer(m.svcCtx.Config.Auth.Issuer),
+			jwt.WithLeeway(time.Duration(m.svcCtx.Config.Auth.LeewaySeconds)*time.Second),
 		)
 		var accessClaims accessCalims
 		token, err := parser.ParseWithClaims(tokenStr, &accessClaims, func(token *jwt.Token) (any, error) {
-			return []byte(m.svcCtx.Config.JwtAuth.Secret), nil
+			return []byte(m.svcCtx.Config.Auth.AccessSecret), nil
 		})
 		if err != nil || !token.Valid {
 			http.Error(w, "invalid token", http.StatusUnauthorized)

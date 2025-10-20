@@ -30,6 +30,10 @@ UserRpc:
 Auth:
   Strict: true # 严格模式，用于确保调用远程服务时，服务端返回的错误信息是完整的
   TokenLookup: "header: Authorization" # 用于从请求头中获取token
+  AccessSecret: ${JWT_SECRET}
+  AccessExpire: 3600
+  Issuer: "auth.rpc"
+  LeewaySeconds: 2
   IgnoreRoutes: # 忽略的请求路径
     - /api/v1/ping
     - /api/v1/login
@@ -37,10 +41,11 @@ Auth:
     - /api/v1/logout
     - /api/v1/logout-all
 
-JwtAuth:
-  Secret: ${JWT_SECRET}
-  Issuer: "auth.rpc"
-  LeewaySeconds: 2
+# JwtAuth:
+#   AccessSecret: ${JWT_SECRET}
+#   Issuer: "auth.rpc"
+#   LeewaySeconds: 2
+  
 
 RateLimit:
   Enable: true

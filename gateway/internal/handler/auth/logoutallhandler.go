@@ -6,27 +6,29 @@ package auth
 import (
 	"net/http"
 
-	"github.com/uwu-octane/antBackend/gateway/internal/grpcerr"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
+	"github.com/uwu-octane/antBackend/gateway/internal/response"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func LogoutAllHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.LogoutAllReq
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			response.FromError(w, status.Error(codes.InvalidArgument, "invalid request body"))
 			return
 		}
 
 		l := auth.NewLogoutAllLogic(r.Context(), svcCtx)
 		resp, err := l.LogoutAll(&req)
 		if err != nil {
-			grpcerr.WriteGrpcError(r, w, err)
+			response.FromError(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			response.Ok(w, resp)
 		}
 	}
 }
