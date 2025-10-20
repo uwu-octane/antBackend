@@ -1,14 +1,13 @@
 package app
 
 import (
-	"github.com/zeromicro/go-zero/core/conf"
-	"github.com/zeromicro/go-zero/core/service"
-	"github.com/zeromicro/go-zero/rest"
-
 	"github.com/uwu-octane/antBackend/gateway/internal/config"
 	"github.com/uwu-octane/antBackend/gateway/internal/handler"
 	"github.com/uwu-octane/antBackend/gateway/internal/middleware"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
+	"github.com/zeromicro/go-zero/core/conf"
+	"github.com/zeromicro/go-zero/core/service"
+	"github.com/zeromicro/go-zero/rest"
 )
 
 func BuildGatewayServer(configFile string) (service.Service, func(), error) {
@@ -24,7 +23,6 @@ func BuildGatewayServer(configFile string) (service.Service, func(), error) {
 	server.Use(middleware.NewRequestID().Handle)
 	server.Use(middleware.NewJwt(ctx).Handle)
 	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
-
 	handler.RegisterHandlers(server, ctx)
 
 	cleanup := func() {}

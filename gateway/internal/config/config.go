@@ -11,11 +11,11 @@ import (
 
 type Config struct {
 	rest.RestConf
-	AuthRpc   zrpc.RpcClientConf `json:"AuthRpc"`
-	UserRpc   zrpc.RpcClientConf `json:"UserRpc"`
-	Auth      AuthConfig         `json:"Auth"`
-	JwtAuth   JwtAuthConfig      `json:"JwtAuth"`
-	RateLimit RateLimitConfig    `json:"RateLimit"`
+	AuthRpc zrpc.RpcClientConf `json:"AuthRpc"`
+	UserRpc zrpc.RpcClientConf `json:"UserRpc"`
+	Auth    AuthConfig         `json:"Auth"`
+	//JwtAuth   JwtAuthConfig      `json:"JwtAuth"`
+	RateLimit RateLimitConfig `json:"RateLimit"`
 
 	Cors               []string `json:"Cors"`
 	ApiPrefix          []string `json:"ApiPrefix"`
@@ -23,16 +23,20 @@ type Config struct {
 }
 
 type AuthConfig struct {
-	Strict       bool
-	TokenLookup  string
-	IgnoreRoutes []string
-}
-
-type JwtAuthConfig struct {
-	Secret        string
+	Strict        bool
+	TokenLookup   string
+	AccessSecret  string
+	AccessExpire  int64
 	Issuer        string
 	LeewaySeconds int64
+	IgnoreRoutes  []string
 }
+
+// type JwtAuthConfig struct {
+// 	AccessSecret  string
+// 	Issuer        string
+// 	LeewaySeconds int64
+// }
 
 type RateLimitConfig struct {
 	Enable         bool

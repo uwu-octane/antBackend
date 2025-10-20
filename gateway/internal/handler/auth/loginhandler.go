@@ -7,21 +7,23 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/uwu-octane/antBackend/gateway/internal/grpcerr"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
+	"github.com/uwu-octane/antBackend/gateway/internal/response"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 	"github.com/uwu-octane/antBackend/gateway/util"
 	"github.com/zeromicro/go-zero/core/limit"
 	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/rest/httpx"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req types.LoginReq
 		if err := httpx.Parse(r, &req); err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			response.FromError(w, status.Error(codes.InvalidArgument, "invalid request body"))
 			return
 		}
 
@@ -31,18 +33,13 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			code, err := limiter.TakeCtx(r.Context(), key)
 			if err != nil {
 				logx.WithContext(r.Context()).Errorf("rate limit check failed: %v", err)
-				httpx.WriteJsonCtx(r.Context(), w, http.StatusTooManyRequests, map[string]any{
-					"message": "rate limit check failed",
-				})
+				response.FromError(w, status.Error(codes.Internal, "rate limit check failed"))
 				return
 			}
 			if code == limit.OverQuota {
 				retryAfter := svcCtx.Config.RateLimit.WindowSeconds
 				w.Header().Set("Retry-After", strconv.Itoa(retryAfter))
-				httpx.WriteJsonCtx(r.Context(), w, http.StatusTooManyRequests, map[string]any{
-					"message":     "too many login attempts",
-					"retry_after": retryAfter,
-				})
+				response.FromError(w, status.Error(codes.ResourceExhausted, "too many login attempts"))
 				return
 			}
 		}
@@ -50,10 +47,10 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := auth.NewLoginLogic(r.Context(), svcCtx)
 		resp, err := l.Login(&req)
 		if err != nil {
-			grpcerr.WriteGrpcError(r, w, err)
+			response.FromError(w, err)
 			return
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			response.Ok(w, resp)
 		}
 	}
 }

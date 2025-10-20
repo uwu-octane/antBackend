@@ -42,7 +42,9 @@ type RefreshReq struct {
 }
 
 type UserInfoResp struct {
-	UserId   int64  `json:"user_id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	UserId      string `json:"user_id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	AvatarUrl   string `json:"avatar_url"`
 }

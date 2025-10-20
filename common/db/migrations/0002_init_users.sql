@@ -3,7 +3,7 @@ create extension if not exists ulid;
 
 create table if not exists users (
     id ulid primary key default gen_ulid(),
-    username varchar(64),
+    username varchar(64) not null unique,
     email varchar(256) not null unique,
     display_name varchar(256),
     avatar_url varchar(256),

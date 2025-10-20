@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	auth "github.com/uwu-octane/antBackend/gateway/internal/handler/auth"
+	user "github.com/uwu-octane/antBackend/gateway/internal/handler/user"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -45,10 +46,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Path:    "/refresh",
 				Handler: auth.RefreshHandler(serverCtx),
 			},
+		},
+		rest.WithPrefix("/api/v1"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
 			{
 				Method:  http.MethodGet,
 				Path:    "/user/info",
-				Handler: auth.GetUserInfoHandler(serverCtx),
+				Handler: user.GetUserInfoHandler(serverCtx),
 			},
 		},
 		rest.WithPrefix("/api/v1"),

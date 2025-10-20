@@ -55,3 +55,51 @@ func httpStatusFromGrpc(c codes.Code) int {
 		return http.StatusInternalServerError
 	}
 }
+
+func AppCodeFromGrpc(c codes.Code) int {
+	switch c {
+	case codes.InvalidArgument, codes.FailedPrecondition, codes.OutOfRange:
+		return 400
+	case codes.Unauthenticated:
+		return 401
+	case codes.PermissionDenied:
+		return 403
+	case codes.NotFound:
+		return 404
+	case codes.AlreadyExists, codes.Aborted:
+		return 409
+	case codes.ResourceExhausted:
+		return 429
+	case codes.Canceled:
+		return 499
+	case codes.Unimplemented:
+		return 501
+	case codes.Unavailable:
+		return 502
+	case codes.DeadlineExceeded:
+		return 504
+	default:
+		return 500
+	}
+}
+
+type ErrBody struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
+
+func AsHttp(err error) (int, ErrBody) {
+	st, ok := status.FromError(err)
+	if !ok {
+		return http.StatusInternalServerError, ErrBody{
+			Code: http.StatusInternalServerError,
+			Msg:  err.Error(),
+		}
+	}
+	httpStatus := httpStatusFromGrpc(st.Code())
+	appCode := AppCodeFromGrpc(st.Code())
+	return httpStatus, ErrBody{
+		Code: appCode,
+		Msg:  st.Message(),
+	}
+}
