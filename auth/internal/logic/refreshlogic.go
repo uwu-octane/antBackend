@@ -13,6 +13,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/util"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc/metadata"
 )
 
 var (
@@ -38,7 +39,7 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 
 func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	// Validate refresh token
-	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetRefreshToken())
+	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetSessionId())
 	if err != nil {
 		return nil, err
 	}
@@ -81,26 +82,86 @@ func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, erro
 }
 
 // Refresh performs single-flight token refresh with retry logic
+// func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
+// 	// Validate refresh token
+// 	sid := in.GetSessionId()
+// 	if strings.TrimSpace(sid) == "" {
+// 		return nil, errors.New("session id is required")
+// 	}
+
+// 	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(sid)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	jti := claims.ID
+// 	username := claims.Subject
+
+// 	// Execute refresh in single-flight group to prevent concurrent refreshes of the same token
+
+// 	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
+// 		resp, newJti, err := l.executeRefreshWithRetry(jti, username)
+// 		l.takeCareOfSid(l.svcCtx.Key, jti, username, newJti)
+// 		return resp, err
+// 	})
+
+// 	if runErr != nil {
+// 		l.handleRefreshError(username, jti, runErr)
+// 		return nil, runErr
+// 	}
+
+// 	return resAny.(*auth.LoginResp), nil
+// }
+
 func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
-	// Validate refresh token
-	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetRefreshToken())
+	sid := in.GetSessionId()
+	if strings.TrimSpace(sid) == "" {
+		return nil, errors.New("session id is required")
+	}
+
+	md, ok := metadata.FromIncomingContext(l.ctx)
+	if !ok {
+		return nil, errors.New("metadata not found")
+	}
+	vals := md.Get("x-refresh-token")
+	if len(vals) == 0 || strings.TrimSpace(vals[0]) == "" {
+		return nil, ErrRefreshNotFound
+	}
+	rawRefresh := strings.TrimSpace(vals[0])
+
+	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(rawRefresh)
 	if err != nil {
 		return nil, err
 	}
 
 	jti := claims.ID
-	username := claims.Subject
+	uid := claims.Subject
 
-	// Execute refresh in single-flight group to prevent concurrent refreshes of the same token
+	refreshKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
+	storedUid, err := l.svcCtx.Redis.Get(refreshKey)
+	if storedUid == "" {
+		return nil, ErrRefreshNotFound
+	}
+	if storedUid != uid {
+		return nil, ErrUserMismatch
+	}
+
+	sidKey := util.SidSetKey(l.svcCtx.Key, sid)
+	isMember, _ := l.svcCtx.Redis.Sismember(sidKey, jti)
+	if !isMember {
+		return nil, ErrRefreshNotFound
+	}
 
 	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
-		resp, newJti, err := l.executeRefreshWithRetry(jti, username)
-		l.takeCareOfSid(l.svcCtx.Key, jti, username, newJti)
+		resp, newJti, err := l.executeRefreshWithRetry(jti, uid)
+		if err == nil {
+			l.takeCareOfSid(l.svcCtx.Key, jti, uid, newJti)
+		}
 		return resp, err
 	})
 
 	if runErr != nil {
-		l.handleRefreshError(username, jti, runErr)
+		l.handleRefreshError(uid, jti, runErr)
 		return nil, runErr
 	}
 
@@ -108,7 +169,7 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 }
 
 // executeRefreshWithRetry executes the refresh operation with retry logic
-func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.LoginResp, string, error) {
+func (l *RefreshLogic) executeRefreshWithRetry(oldJti, uid string) (*auth.LoginResp, string, error) {
 	const maxRetries = 2
 	const redisTimeout = 150 * time.Millisecond
 
@@ -130,7 +191,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.L
 			l.svcCtx.Key,
 			oldJti,
 			newRefreshJti,
-			username,
+			uid,
 			int(cfg.RefreshExpireSeconds),
 		)
 		cancel()
@@ -140,7 +201,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.L
 			// Check if it's a temporary error (timeout, network, etc.)
 			if isTemporaryError(err) && attempt < maxRetries-1 {
 				logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
-					attempt+1, username, oldJti, err)
+					attempt+1, uid, oldJti, err)
 				time.Sleep(10 * time.Millisecond) // Small backoff
 				continue
 			}
@@ -163,7 +224,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, username string) (*auth.L
 		}
 
 		// Generate new token pair
-		resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(username, newAccessJti, newRefreshJti)
+		resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(uid, newAccessJti, newRefreshJti)
 		return resp, newRefreshJti, err
 	}
 
@@ -234,6 +295,10 @@ func (l *RefreshLogic) takeCareOfSid(key string, oldJti string, uid string, newJ
 	//take care of sid -> jtis: remove old jti, add new jti
 	_, _ = l.svcCtx.Redis.Srem(util.SidSetKey(key, sid), oldJti)
 	_, _ = l.svcCtx.Redis.Sadd(util.SidSetKey(key, sid), newJti)
+
+	refreshTTL := int(l.svcCtx.Config.JwtAuth.RefreshExpireSeconds)
+	_ = l.svcCtx.Redis.Expire(util.SidSetKey(key, sid), refreshTTL)
+	_ = l.svcCtx.Redis.Expire(util.UserSidsKey(key, uid), refreshTTL)
 
 	//write new jti index jti-> sid(TTL = refresh expire seconds)
 	if err := l.svcCtx.Redis.Setex(util.JtiSidKey(key, newJti), sid, int(l.svcCtx.Config.JwtAuth.RefreshExpireSeconds)); err != nil {

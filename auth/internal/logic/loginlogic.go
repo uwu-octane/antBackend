@@ -65,7 +65,7 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 		return nil, err
 	}
 
-	refreshToken, refreshExpireSeconds, err := l.svcCtx.TokenHelper.SignRefresh(userID, refreshJti)
+	_ /* refreshToken not returned to client */, refreshExpireSeconds, err := l.svcCtx.TokenHelper.SignRefresh(userID, refreshJti)
 	if err != nil {
 		return nil, err
 	}
@@ -75,10 +75,18 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	if _, err := l.svcCtx.Redis.Sadd(util.UserSidsKey(l.svcCtx.Key, userID), sid); err != nil {
 		return nil, err
 	}
+	if err := l.svcCtx.Redis.Expire(util.UserSidsKey(l.svcCtx.Key, userID), int(refreshExpireSeconds)); err != nil {
+		return nil, err
+	}
+
 	//* sid->jit put the first refresh jti in to the sid collection
 	if _, err := l.svcCtx.Redis.Sadd(util.SidSetKey(l.svcCtx.Key, sid), refreshJti); err != nil {
 		return nil, err
 	}
+	if err := l.svcCtx.Redis.Expire(util.SidSetKey(l.svcCtx.Key, sid), int(refreshExpireSeconds)); err != nil {
+		return nil, err
+	}
+
 	//* jti ->sid (index of jti to sid)
 	if err := l.svcCtx.Redis.Setex(util.JtiSidKey(l.svcCtx.Key, refreshJti), sid, int(refreshExpireSeconds)); err != nil {
 		return nil, err
@@ -91,9 +99,9 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	}
 
 	return &auth.LoginResp{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    accessExpireSeconds,
-		TokenType:    "bearer",
+		AccessToken: accessToken,
+		SessionId:   sid,
+		ExpiresIn:   accessExpireSeconds,
+		TokenType:   "bearer",
 	}, nil
 }

@@ -168,9 +168,9 @@ func (h *TokenHelper) GenerateTokenPair(username string, accessJti, refreshJti s
 	}
 
 	return &auth.LoginResp{
-		AccessToken:  access,
-		RefreshToken: refresh,
-		ExpiresIn:    accessExpireSeconds,
-		TokenType:    "bearer",
+		AccessToken: access,
+		SessionId:   refresh, //todo replace with sid
+		ExpiresIn:   accessExpireSeconds,
+		TokenType:   "bearer",
 	}, nil
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type RefreshLogic struct {
@@ -27,17 +29,19 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 	}
 }
 
-func (l *RefreshLogic) Refresh(req *types.RefreshReq) (resp *types.LoginResp, err error) {
+func (l *RefreshLogic) Refresh(sessionId string) (resp *types.LoginResp, err error) {
+	if sessionId == "" {
+		return nil, status.Error(codes.InvalidArgument, "session id is required")
+	}
 	r, err := l.svcCtx.AuthRpc.Refresh(l.ctx, &authservice.RefreshReq{
-		RefreshToken: req.RefreshToken,
+		SessionId: sessionId,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &types.LoginResp{
-		AccessToken:  r.AccessToken,
-		RefreshToken: r.RefreshToken,
-		ExpiresIn:    r.ExpiresIn,
-		TokenType:    r.TokenType,
+		AccessToken: r.AccessToken,
+		ExpiresIn:   r.ExpiresIn,
+		TokenType:   r.TokenType,
 	}, nil
 }

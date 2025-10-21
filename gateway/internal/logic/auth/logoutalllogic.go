@@ -6,11 +6,8 @@ package auth
 import (
 	"context"
 
-	"github.com/uwu-octane/antBackend/api/v1/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -29,19 +26,8 @@ func NewLogoutAllLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutA
 	}
 }
 
-func (l *LogoutAllLogic) LogoutAll(req *types.LogoutAllReq) (resp *types.LogoutResp, err error) {
-	if req.RefreshToken == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
-	}
-	_, err = l.svcCtx.AuthRpc.LogoutAll(l.ctx, &auth.LogoutAllReq{
-		RefreshToken: req.RefreshToken,
-	})
-	if err != nil {
-		return nil, err
-	}
+func (l *LogoutAllLogic) LogoutAll() (resp *types.LogoutResp, err error) {
+	// todo: add your logic here and delete this line
 
-	return &types.LogoutResp{
-		Ok:      true,
-		Message: "logout all success",
-	}, nil
+	return
 }
