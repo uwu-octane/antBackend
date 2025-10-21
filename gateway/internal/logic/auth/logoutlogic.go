@@ -29,12 +29,13 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 	}
 }
 
-func (l *LogoutLogic) Logout(req *types.LogoutReq) (resp *types.LogoutResp, err error) {
-	if req.RefreshToken == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "refresh token is required")
+func (l *LogoutLogic) Logout(sid string) (resp *types.LogoutResp, err error) {
+	if sid == "" {
+		return nil, status.Error(codes.InvalidArgument, "session id is required")
 	}
 	_, err = l.svcCtx.AuthRpc.Logout(l.ctx, &auth.LogoutReq{
-		RefreshToken: req.RefreshToken,
+		SessionId: sid,
+		All:       false,
 	})
 	if err != nil {
 		return nil, err

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/uwu-octane/antBackend/gateway/util"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -15,7 +16,7 @@ const (
 func NewGrpcMetaMiddleware() func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			refresh := readCookie(r, cookieRefreshName)
+			refresh := util.ReadCookie(r, cookieRefreshName)
 			if refresh != "" {
 				inject := metadata.Pairs(mdRefreshName, strings.TrimSpace(refresh))
 				if old, ok := metadata.FromOutgoingContext(r.Context()); ok {
@@ -28,12 +29,4 @@ func NewGrpcMetaMiddleware() func(http.HandlerFunc) http.HandlerFunc {
 			next(w, r)
 		}
 	}
-}
-
-func readCookie(r *http.Request, name string) string {
-	c, err := r.Cookie(name)
-	if err != nil || c == nil {
-		return ""
-	}
-	return c.Value
 }

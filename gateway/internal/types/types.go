@@ -13,6 +13,7 @@ type LoginReq struct {
 
 type LoginResp struct {
 	AccessToken string `json:"access_token"`
+	SessionId   string `json:"session_id"`
 	ExpiresIn   int64  `json:"expires_in"`
 	TokenType   string `json:"token_type"`
 }
