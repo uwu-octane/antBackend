@@ -42,8 +42,3 @@ func (s *AuthServiceServer) Logout(ctx context.Context, in *auth.LogoutReq) (*au
 	l := logic.NewLogoutLogic(ctx, s.svcCtx)
 	return l.Logout(in)
 }
-
-func (s *AuthServiceServer) LogoutAll(ctx context.Context, in *auth.LogoutAllReq) (*auth.LogoutResp, error) {
-	l := logic.NewLogoutAllLogic(ctx, s.svcCtx)
-	return l.LogoutAll(in)
-}

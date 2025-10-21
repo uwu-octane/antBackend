@@ -35,6 +35,7 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 	server.Use(middleware.NewRequestID().Handle)
 	server.Use(middleware.NewJwt(ctx).Handle)
+	server.Use(middleware.NewGrpcMetaMiddleware())
 	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
 	handler.RegisterHandlers(server, ctx)
 

@@ -27,42 +27,68 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 }
 
 func (l *LogoutLogic) Logout(in *auth.LogoutReq) (*auth.LogoutResp, error) {
-	if in.GetRefreshToken() == "" {
-		return nil, errors.New("refresh token is required")
+	sid := in.GetSessionId()
+	if sid == "" {
+		return nil, errors.New("session id is required")
 	}
 
-	claims, err := l.svcCtx.TokenHelper.Parse(in.GetRefreshToken())
+	uid, err := l.revokeOneSid(l.svcCtx.Key, sid)
 	if err != nil {
-		return nil, fmt.Errorf("invalid refresh token: %w", err)
+		return nil, fmt.Errorf("failed to revoke sid: %s, %v", sid, err)
 	}
 
-	if claims.TokenType != "refresh" {
-		return nil, errors.New("invalid refresh token")
-	}
-	jti := claims.ID
-	sub := claims.Subject
-	if jti == "" || sub == "" {
-		return nil, errors.New("invalid refresh token")
+	if in.GetAll() && uid != "" {
+		//get all sids of the user
+		userSidsKey := util.UserSidsKey(l.svcCtx.Key, uid)
+		allSids, _ := l.svcCtx.Redis.Smembers(userSidsKey)
+		//revoke all sids of the user
+		for _, s := range allSids {
+			if _, err := l.revokeOneSid(l.svcCtx.Key, s); err != nil {
+				l.Logger.Errorf("revoke sid in all failed uid=%s sid=%s err=%v", uid, s, err)
+			}
+		}
+		//delete user sids set
+		_, _ = l.svcCtx.Redis.Del(userSidsKey)
 	}
 
-	refreshKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
-	uid, err := l.svcCtx.Redis.Get(refreshKey)
-	if err != nil || uid == "" {
-		return &auth.LogoutResp{
-			Ok:      true,
-			Message: fmt.Sprintf("May expired, as idempotent: %v", err),
-		}, nil
-	}
-	if uid != sub {
-		return nil, errors.New("subject mismatch")
-	}
-	if _, err := l.svcCtx.Redis.Del(refreshKey); err != nil {
-		l.Logger.Errorf("failed to delete refresh token: %w", err)
-		return nil, err
-	}
-	//set reuse flag
-	_ = l.svcCtx.Redis.Set(util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeReuse, jti), "1")
+	return &auth.LogoutResp{Ok: true, Message: "logged out"}, nil
+}
 
-	//todo: clear jti from sid family
-	return &auth.LogoutResp{Ok: true, Message: "log out"}, nil
+// delete all refresh jti associated with the sid
+// clear index
+// return uid
+func (l *LogoutLogic) revokeOneSid(key, sid string) (string, error) {
+	sidKey := util.SidSetKey(key, sid)
+	jtis, err := l.svcCtx.Redis.Smembers(sidKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get jtis: %w", err)
+	}
+	if len(jtis) == 0 {
+		_, _ = l.svcCtx.Redis.Del(sidKey)
+		return "", nil
+	}
+	var uid string
+	for _, jti := range jtis {
+		if uid == "" {
+			if v, _ := l.svcCtx.Redis.Get(util.RedisKey(key, util.RedisKeyTypeRefresh, jti)); v != "" {
+				uid = v
+			}
+		}
+		//delete auth:refresh:<jti>
+		_, _ = l.svcCtx.Redis.Del(util.RedisKey(key, util.RedisKeyTypeRefresh, jti))
+		//set reuse flag
+		_ = l.svcCtx.Redis.Set(util.RedisKey(key, util.RedisKeyTypeReuse, jti), "1")
+		//delete auth:jti_sid:<jti>
+		_, _ = l.svcCtx.Redis.Del(util.JtiSidKey(key, jti))
+		//delete jti from sid set
+		_, _ = l.svcCtx.Redis.Srem(sidKey, jti)
+	}
+	//delete sid set
+	_, _ = l.svcCtx.Redis.Del(sidKey)
+
+	//delete auth:user:<uid>:sids
+	if uid != "" {
+		_, _ = l.svcCtx.Redis.Srem(util.UserSidsKey(key, uid), sid)
+	}
+	return uid, nil
 }

@@ -158,9 +158,9 @@ func (x *LoginReq) GetPassword() string {
 type LoginResp struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccessToken   string                 `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	RefreshToken  string                 `protobuf:"bytes,2,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"` //
-	ExpiresIn     int64                  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`         //sec
-	TokenType     string                 `protobuf:"bytes,4,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`          //bearer
+	SessionId     string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`  //
+	ExpiresIn     int64                  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"` //sec
+	TokenType     string                 `protobuf:"bytes,4,opt,name=token_type,json=tokenType,proto3" json:"token_type,omitempty"`  //bearer
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,9 +202,9 @@ func (x *LoginResp) GetAccessToken() string {
 	return ""
 }
 
-func (x *LoginResp) GetRefreshToken() string {
+func (x *LoginResp) GetSessionId() string {
 	if x != nil {
-		return x.RefreshToken
+		return x.SessionId
 	}
 	return ""
 }
@@ -225,7 +225,7 @@ func (x *LoginResp) GetTokenType() string {
 
 type RefreshReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"` //read from cookie by gateway
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -260,16 +260,17 @@ func (*RefreshReq) Descriptor() ([]byte, []int) {
 	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *RefreshReq) GetRefreshToken() string {
+func (x *RefreshReq) GetSessionId() string {
 	if x != nil {
-		return x.RefreshToken
+		return x.SessionId
 	}
 	return ""
 }
 
 type LogoutReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	All           bool                   `protobuf:"varint,2,opt,name=all,proto3" json:"all,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -304,11 +305,18 @@ func (*LogoutReq) Descriptor() ([]byte, []int) {
 	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *LogoutReq) GetRefreshToken() string {
+func (x *LogoutReq) GetSessionId() string {
 	if x != nil {
-		return x.RefreshToken
+		return x.SessionId
 	}
 	return ""
+}
+
+func (x *LogoutReq) GetAll() bool {
+	if x != nil {
+		return x.All
+	}
+	return false
 }
 
 type LogoutResp struct {
@@ -363,50 +371,6 @@ func (x *LogoutResp) GetMessage() string {
 	return ""
 }
 
-type LogoutAllReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	RefreshToken  string                 `protobuf:"bytes,1,opt,name=refresh_token,json=refreshToken,proto3" json:"refresh_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *LogoutAllReq) Reset() {
-	*x = LogoutAllReq{}
-	mi := &file_api_v1_auth_auth_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *LogoutAllReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*LogoutAllReq) ProtoMessage() {}
-
-func (x *LogoutAllReq) ProtoReflect() protoreflect.Message {
-	mi := &file_api_v1_auth_auth_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use LogoutAllReq.ProtoReflect.Descriptor instead.
-func (*LogoutAllReq) Descriptor() ([]byte, []int) {
-	return file_api_v1_auth_auth_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *LogoutAllReq) GetRefreshToken() string {
-	if x != nil {
-		return x.RefreshToken
-	}
-	return ""
-}
-
 var File_api_v1_auth_auth_proto protoreflect.FileDescriptor
 
 const file_api_v1_auth_auth_proto_rawDesc = "" +
@@ -417,31 +381,32 @@ const file_api_v1_auth_auth_proto_rawDesc = "" +
 	"\x04pong\x18\x01 \x01(\tR\x04pong\"B\n" +
 	"\bLoginReq\x12\x1a\n" +
 	"\busername\x18\x01 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x91\x01\n" +
+	"\bpassword\x18\x02 \x01(\tR\bpassword\"\x8b\x01\n" +
 	"\tLoginResp\x12!\n" +
-	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12#\n" +
-	"\rrefresh_token\x18\x02 \x01(\tR\frefreshToken\x12\x1d\n" +
+	"\faccess_token\x18\x01 \x01(\tR\vaccessToken\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x02 \x01(\tR\tsessionId\x12\x1d\n" +
 	"\n" +
 	"expires_in\x18\x03 \x01(\x03R\texpiresIn\x12\x1d\n" +
 	"\n" +
-	"token_type\x18\x04 \x01(\tR\ttokenType\"1\n" +
+	"token_type\x18\x04 \x01(\tR\ttokenType\"+\n" +
 	"\n" +
-	"RefreshReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"0\n" +
-	"\tLogoutReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken\"6\n" +
+	"RefreshReq\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"<\n" +
+	"\tLogoutReq\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x10\n" +
+	"\x03all\x18\x02 \x01(\bR\x03all\"6\n" +
 	"\n" +
 	"LogoutResp\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"3\n" +
-	"\fLogoutAllReq\x12#\n" +
-	"\rrefresh_token\x18\x01 \x01(\tR\frefreshToken2\x8a\x02\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage2\xd1\x01\n" +
 	"\vAuthService\x12+\n" +
 	"\x04Ping\x12\x10.auth.v1.PingReq\x1a\x11.auth.v1.PingResp\x12.\n" +
 	"\x05Login\x12\x11.auth.v1.LoginReq\x1a\x12.auth.v1.LoginResp\x122\n" +
 	"\aRefresh\x12\x13.auth.v1.RefreshReq\x1a\x12.auth.v1.LoginResp\x121\n" +
-	"\x06Logout\x12\x12.auth.v1.LogoutReq\x1a\x13.auth.v1.LogoutResp\x127\n" +
-	"\tLogoutAll\x12\x15.auth.v1.LogoutAllReq\x1a\x13.auth.v1.LogoutRespB.Z,github.com/uwu-octane/antBackend/api/v1/authb\x06proto3"
+	"\x06Logout\x12\x12.auth.v1.LogoutReq\x1a\x13.auth.v1.LogoutRespB.Z,github.com/uwu-octane/antBackend/api/v1/authb\x06proto3"
 
 var (
 	file_api_v1_auth_auth_proto_rawDescOnce sync.Once
@@ -455,30 +420,27 @@ func file_api_v1_auth_auth_proto_rawDescGZIP() []byte {
 	return file_api_v1_auth_auth_proto_rawDescData
 }
 
-var file_api_v1_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_api_v1_auth_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_api_v1_auth_auth_proto_goTypes = []any{
-	(*PingReq)(nil),      // 0: auth.v1.PingReq
-	(*PingResp)(nil),     // 1: auth.v1.PingResp
-	(*LoginReq)(nil),     // 2: auth.v1.LoginReq
-	(*LoginResp)(nil),    // 3: auth.v1.LoginResp
-	(*RefreshReq)(nil),   // 4: auth.v1.RefreshReq
-	(*LogoutReq)(nil),    // 5: auth.v1.LogoutReq
-	(*LogoutResp)(nil),   // 6: auth.v1.LogoutResp
-	(*LogoutAllReq)(nil), // 7: auth.v1.LogoutAllReq
+	(*PingReq)(nil),    // 0: auth.v1.PingReq
+	(*PingResp)(nil),   // 1: auth.v1.PingResp
+	(*LoginReq)(nil),   // 2: auth.v1.LoginReq
+	(*LoginResp)(nil),  // 3: auth.v1.LoginResp
+	(*RefreshReq)(nil), // 4: auth.v1.RefreshReq
+	(*LogoutReq)(nil),  // 5: auth.v1.LogoutReq
+	(*LogoutResp)(nil), // 6: auth.v1.LogoutResp
 }
 var file_api_v1_auth_auth_proto_depIdxs = []int32{
 	0, // 0: auth.v1.AuthService.Ping:input_type -> auth.v1.PingReq
 	2, // 1: auth.v1.AuthService.Login:input_type -> auth.v1.LoginReq
 	4, // 2: auth.v1.AuthService.Refresh:input_type -> auth.v1.RefreshReq
 	5, // 3: auth.v1.AuthService.Logout:input_type -> auth.v1.LogoutReq
-	7, // 4: auth.v1.AuthService.LogoutAll:input_type -> auth.v1.LogoutAllReq
-	1, // 5: auth.v1.AuthService.Ping:output_type -> auth.v1.PingResp
-	3, // 6: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResp
-	3, // 7: auth.v1.AuthService.Refresh:output_type -> auth.v1.LoginResp
-	6, // 8: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResp
-	6, // 9: auth.v1.AuthService.LogoutAll:output_type -> auth.v1.LogoutResp
-	5, // [5:10] is the sub-list for method output_type
-	0, // [0:5] is the sub-list for method input_type
+	1, // 4: auth.v1.AuthService.Ping:output_type -> auth.v1.PingResp
+	3, // 5: auth.v1.AuthService.Login:output_type -> auth.v1.LoginResp
+	3, // 6: auth.v1.AuthService.Refresh:output_type -> auth.v1.LoginResp
+	6, // 7: auth.v1.AuthService.Logout:output_type -> auth.v1.LogoutResp
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -495,7 +457,7 @@ func file_api_v1_auth_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_v1_auth_auth_proto_rawDesc), len(file_api_v1_auth_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

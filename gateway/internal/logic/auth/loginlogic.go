@@ -9,8 +9,9 @@ import (
 	"github.com/uwu-octane/antBackend/auth/authservice"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
-
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type LoginLogic struct {
@@ -27,19 +28,23 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 	}
 }
 
-func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err error) {
+func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, header metadata.MD, err error) {
+	var md metadata.MD
 	r, err := l.svcCtx.AuthRpc.Login(l.ctx, &authservice.LoginReq{
 		Username: req.Username,
 		Password: req.Password,
-	})
+	},
+		grpc.Header(&md), // get grpc Header
+	)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
+	logx.Infof("login response: %+v", r)
+	logx.Infof("login metadata: %+v", md)
 	return &types.LoginResp{
-		AccessToken:  r.AccessToken,
-		RefreshToken: r.RefreshToken,
-		ExpiresIn:    r.ExpiresIn,
-		TokenType:    r.TokenType,
-	}, nil
+		AccessToken: r.GetAccessToken(),
+		SessionId:   r.GetSessionId(),
+		ExpiresIn:   r.GetExpiresIn(),
+		TokenType:   r.GetTokenType(),
+	}, md, nil
 }

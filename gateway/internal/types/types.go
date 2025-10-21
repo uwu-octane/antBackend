@@ -12,18 +12,10 @@ type LoginReq struct {
 }
 
 type LoginResp struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int64  `json:"expires_in"`
-	TokenType    string `json:"token_type"`
-}
-
-type LogoutAllReq struct {
-	RefreshToken string `json:"refresh_token"`
-}
-
-type LogoutReq struct {
-	RefreshToken string `json:"refresh_token"`
+	AccessToken string `json:"access_token"`
+	SessionId   string `json:"session_id"`
+	ExpiresIn   int64  `json:"expires_in"`
+	TokenType   string `json:"token_type"`
 }
 
 type LogoutResp struct {
@@ -35,10 +27,6 @@ type MeResp struct {
 	Uid string `json:"uid"`
 	Jti string `json:"jti"`
 	Iat int64  `json:"iat"`
-}
-
-type RefreshReq struct {
-	RefreshToken string `json:"refresh_token"`
 }
 
 type UserInfoResp struct {

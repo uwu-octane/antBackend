@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/uwu-octane/antBackend/gateway/internal/handler/constvar"
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/auth"
 	"github.com/uwu-octane/antBackend/gateway/internal/response"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
@@ -43,14 +44,30 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 				return
 			}
 		}
-
 		l := auth.NewLoginLogic(r.Context(), svcCtx)
-		resp, err := l.Login(&req)
+		resp, header, err := l.Login(&req)
 		if err != nil {
 			response.FromError(w, err)
 			return
-		} else {
-			response.Ok(w, resp)
 		}
+
+		var refresh string
+		if header != nil {
+			vals := header.Get(constvar.HeaderRefreshToken)
+			if len(vals) > 0 {
+				refresh = vals[0]
+			}
+		}
+		sid := resp.SessionId
+		if sid == "" || refresh == "" {
+			response.FromError(w, status.Error(codes.Internal, "session id or refresh token is required"))
+			return
+		}
+		var secure bool
+		if svcCtx.Config.GatewayMode != "DEV" {
+			secure = true
+		}
+		SetAuthCookies(w, sid, refresh, secure)
+		response.Ok(w, resp)
 	}
 }

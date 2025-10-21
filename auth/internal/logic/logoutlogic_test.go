@@ -63,7 +63,8 @@ func TestLogout_Success(t *testing.T) {
 	// Test logout
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	if err != nil {
@@ -101,7 +102,8 @@ func TestLogout_MissingRefreshToken(t *testing.T) {
 
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: "",
+		SessionId: "",
+		All:       false,
 	})
 
 	if err == nil {
@@ -124,7 +126,8 @@ func TestLogout_InvalidRefreshToken(t *testing.T) {
 
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: "invalid-token",
+		SessionId: "invalid-token",
+		All:       false,
 	})
 
 	if err == nil {
@@ -153,7 +156,8 @@ func TestLogout_WrongTokenType(t *testing.T) {
 
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: accessToken,
+		SessionId: accessToken,
+		All:       false,
 	})
 
 	if err == nil {
@@ -188,7 +192,8 @@ func TestLogout_TokenNotFoundInRedis(t *testing.T) {
 
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	// Should succeed as idempotent operation
@@ -234,7 +239,8 @@ func TestLogout_SubjectMismatch(t *testing.T) {
 
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	if err == nil {
@@ -281,7 +287,8 @@ func TestLogout_MultipleLogouts(t *testing.T) {
 
 	// First logout should succeed
 	resp1, err1 := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	if err1 != nil {
@@ -294,7 +301,8 @@ func TestLogout_MultipleLogouts(t *testing.T) {
 
 	// Second logout should be idempotent
 	resp2, err2 := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	if err2 != nil {
@@ -340,7 +348,8 @@ func TestLogout_WithRealRedisOperations(t *testing.T) {
 	// Test logout
 	logic := NewLogoutLogic(ctx, svcCtx)
 	resp, err := logic.Logout(&auth.LogoutReq{
-		RefreshToken: refreshToken,
+		SessionId: refreshToken,
+		All:       false,
 	})
 
 	if err != nil {
