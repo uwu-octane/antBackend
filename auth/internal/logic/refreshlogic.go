@@ -13,6 +13,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/util"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -35,50 +36,6 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 		svcCtx: svcCtx,
 		Logger: logx.WithContext(ctx),
 	}
-}
-
-func (l *RefreshLogic) SimpleRefresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
-	// Validate refresh token
-	claims, err := l.svcCtx.TokenHelper.ValidateRefreshToken(in.GetSessionId())
-	if err != nil {
-		return nil, err
-	}
-
-	jti := claims.ID
-	username := claims.Subject
-
-	// Verify token in Redis and delete old one
-	oldKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
-	uid, err := l.svcCtx.Redis.Get(oldKey)
-	if err != nil || uid == "" {
-		return nil, ErrRefreshNotFound
-	}
-
-	if uid != username {
-		return nil, ErrUserMismatch
-	}
-
-	if _, err = l.svcCtx.Redis.Del(oldKey); err != nil {
-		return nil, errors.New("failed to delete refresh token")
-	}
-
-	// Generate new token pair
-	newRefreshJti := uuid.NewString()
-	newAccessJti := uuid.NewString()
-
-	resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(username, newAccessJti, newRefreshJti)
-	if err != nil {
-		return nil, err
-	}
-
-	// Store new refresh token in Redis
-	cfg := l.svcCtx.Config.JwtAuth
-	newKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, newRefreshJti)
-	if err := l.svcCtx.Redis.Setex(newKey, username, int(cfg.RefreshExpireSeconds)); err != nil {
-		return nil, err
-	}
-
-	return resp, nil
 }
 
 // Refresh performs single-flight token refresh with retry logic
@@ -152,24 +109,29 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 		return nil, ErrRefreshNotFound
 	}
 
-	resAny, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
-		resp, newJti, err := l.executeRefreshWithRetry(jti, uid)
+	res, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
+		access, newJti, err := l.executeRefreshWithRetry(jti, uid)
 		if err == nil {
 			l.takeCareOfSid(l.svcCtx.Key, jti, uid, newJti)
 		}
+		resp := &auth.LoginResp{
+			AccessToken: access,
+			TokenType:   "bearer",
+			ExpiresIn:   l.svcCtx.Config.JwtAuth.AccessExpireSeconds,
+			SessionId:   sid,
+		}
 		return resp, err
 	})
-
 	if runErr != nil {
 		l.handleRefreshError(uid, jti, runErr)
 		return nil, runErr
 	}
 
-	return resAny.(*auth.LoginResp), nil
+	return res.(*auth.LoginResp), nil
 }
 
 // executeRefreshWithRetry executes the refresh operation with retry logic
-func (l *RefreshLogic) executeRefreshWithRetry(oldJti, uid string) (*auth.LoginResp, string, error) {
+func (l *RefreshLogic) executeRefreshWithRetry(oldJti, uid string) (string, string, error) {
 	const maxRetries = 2
 	const redisTimeout = 150 * time.Millisecond
 
@@ -206,29 +168,30 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, uid string) (*auth.LoginR
 				continue
 			}
 			// Non-retryable error or max retries reached
-			return nil, newRefreshJti, err
+			return "", newRefreshJti, err
 		}
 
 		// Check rotate result - these are business errors (non-retryable)
 		switch rot.Code {
 		case dao.RotateCodeOldNotFound:
-			return nil, newRefreshJti, ErrRefreshNotFound
+			return "", newRefreshJti, ErrRefreshNotFound
 		case dao.RotateCodeMismatch:
-			return nil, newRefreshJti, ErrUserMismatch
+			return "", newRefreshJti, ErrUserMismatch
 		case dao.RotateCodeReused:
-			return nil, newRefreshJti, ErrRefreshReused
+			return "", newRefreshJti, ErrRefreshReused
 		case dao.RotateCodeOK:
 			// Success - generate tokens
 		default:
-			return nil, newRefreshJti, ErrUnknown
+			return "", newRefreshJti, ErrUnknown
 		}
 
 		// Generate new token pair
-		resp, err := l.svcCtx.TokenHelper.GenerateTokenPair(uid, newAccessJti, newRefreshJti)
-		return resp, newRefreshJti, err
+		access, refresh, err := l.svcCtx.TokenHelper.GenerateTokenPair(uid, newAccessJti, newRefreshJti)
+		_ = grpc.SetHeader(l.ctx, metadata.Pairs("x-refresh-token", refresh))
+		return access, newRefreshJti, err
 	}
 
-	return nil, "", lastErr
+	return "", "", lastErr
 }
 
 // handleRefreshError classifies and logs refresh errors

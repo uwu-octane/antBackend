@@ -7,12 +7,13 @@ import (
 	"context"
 
 	"github.com/uwu-octane/antBackend/auth/authservice"
+	"github.com/uwu-octane/antBackend/gateway/internal/handler/constvar"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
 
 	"github.com/zeromicro/go-zero/core/logx"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 type RefreshLogic struct {
@@ -29,19 +30,23 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 	}
 }
 
-func (l *RefreshLogic) Refresh(sessionId string) (resp *types.LoginResp, err error) {
-	if sessionId == "" {
-		return nil, status.Error(codes.InvalidArgument, "session id is required")
-	}
-	r, err := l.svcCtx.AuthRpc.Refresh(l.ctx, &authservice.RefreshReq{
+func (l *RefreshLogic) Refresh(sessionId string, refreshToken string) (resp *types.LoginResp, header metadata.MD, err error) {
+	md := metadata.Pairs(constvar.HeaderRefreshToken, refreshToken)
+	ctx := metadata.NewOutgoingContext(l.ctx, md)
+
+	var hdr metadata.MD
+	r, err := l.svcCtx.AuthRpc.Refresh(ctx, &authservice.RefreshReq{
 		SessionId: sessionId,
-	})
+	}, grpc.Header(&hdr))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+	logx.Infof("refresh response: %+v", r)
+	logx.Infof("refresh header: %+v", hdr)
+
 	return &types.LoginResp{
 		AccessToken: r.AccessToken,
 		ExpiresIn:   r.ExpiresIn,
 		TokenType:   r.TokenType,
-	}, nil
+	}, hdr, nil
 }

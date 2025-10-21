@@ -11,10 +11,10 @@ import (
 
 type Config struct {
 	rest.RestConf
-	Mode    string             `json:"Mode"`
-	AuthRpc zrpc.RpcClientConf `json:"AuthRpc"`
-	UserRpc zrpc.RpcClientConf `json:"UserRpc"`
-	Auth    AuthConfig         `json:"Auth"`
+	GatewayMode string             `json:"GatewayMode"`
+	AuthRpc     zrpc.RpcClientConf `json:"AuthRpc"`
+	UserRpc     zrpc.RpcClientConf `json:"UserRpc"`
+	Auth        AuthConfig         `json:"Auth"`
 	//JwtAuth   JwtAuthConfig      `json:"JwtAuth"`
 	RateLimit RateLimitConfig `json:"RateLimit"`
 

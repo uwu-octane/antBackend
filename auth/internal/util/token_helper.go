@@ -156,21 +156,33 @@ func (h *TokenHelper) ValidateRefreshToken(token string) (*Claims, error) {
 }
 
 // GenerateTokenPair generates a new access and refresh token pair
-func (h *TokenHelper) GenerateTokenPair(username string, accessJti, refreshJti string) (*auth.LoginResp, error) {
+func (h *TokenHelper) GenerateTokenPairOld(username string, sid string, accessJti, refreshJti string) (*auth.LoginResp, string, error) {
 	access, accessExpireSeconds, err := h.SignAccess(username, accessJti)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	refresh, _, err := h.SignRefresh(username, refreshJti)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-
 	return &auth.LoginResp{
 		AccessToken: access,
-		SessionId:   refresh, //todo replace with sid
+		SessionId:   sid,
 		ExpiresIn:   accessExpireSeconds,
 		TokenType:   "bearer",
-	}, nil
+	}, refresh, nil
+}
+
+func (h *TokenHelper) GenerateTokenPair(username string, accessJti, refreshJti string) (string, string, error) {
+	access, _, err := h.SignAccess(username, accessJti)
+	if err != nil {
+		return "", "", err
+	}
+
+	refresh, _, err := h.SignRefresh(username, refreshJti)
+	if err != nil {
+		return "", "", err
+	}
+	return access, refresh, nil
 }

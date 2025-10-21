@@ -39,7 +39,8 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, header m
 	if err != nil {
 		return nil, nil, err
 	}
-
+	logx.Infof("login response: %+v", r)
+	logx.Infof("login metadata: %+v", md)
 	return &types.LoginResp{
 		AccessToken: r.GetAccessToken(),
 		SessionId:   r.GetSessionId(),

@@ -10,7 +10,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -29,7 +31,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
-	//dev only
+
 	if in.GetUsername() == "" || in.GetPassword() == "" {
 		return nil, status.Error(codes.InvalidArgument, "username and password are required")
 	}
@@ -65,8 +67,11 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 		return nil, err
 	}
 
-	_ /* refreshToken not returned to client */, refreshExpireSeconds, err := l.svcCtx.TokenHelper.SignRefresh(userID, refreshJti)
+	refreshToken, refreshExpireSeconds, err := l.svcCtx.TokenHelper.SignRefresh(userID, refreshJti)
 	if err != nil {
+		return nil, err
+	}
+	if err := grpc.SetHeader(l.ctx, metadata.Pairs("x-refresh-token", refreshToken)); err != nil {
 		return nil, err
 	}
 

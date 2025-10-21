@@ -53,7 +53,7 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		var refresh string
 		if header != nil {
-			vals := header.Get(constvar.CookieHeaderRefresh)
+			vals := header.Get(constvar.HeaderRefreshToken)
 			if len(vals) > 0 {
 				refresh = vals[0]
 			}
@@ -64,7 +64,7 @@ func LoginHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 			return
 		}
 		var secure bool
-		if svcCtx.Config.Mode != "DEV" {
+		if svcCtx.Config.GatewayMode != "DEV" {
 			secure = true
 		}
 		SetAuthCookies(w, sid, refresh, secure)
