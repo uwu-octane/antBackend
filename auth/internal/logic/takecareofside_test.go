@@ -45,7 +45,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, loginResp)
 
-	rtoken1 := loginResp.RefreshToken
+	rtoken1 := loginResp.SessionId
 	fmt.Printf("✓ Login successful\n")
 	fmt.Printf("  RTOKEN1: %s...\n", rtoken1[:20])
 
@@ -69,12 +69,12 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 	// Step 2: First Refresh (RTOKEN1 -> RTOKEN2)
 	fmt.Printf("\n--- Step 2: First Refresh (RTOKEN1 -> RTOKEN2) ---\n")
 	refreshResp1, err := refreshLogic.Refresh(&auth.RefreshReq{
-		RefreshToken: rtoken1,
+		SessionId: rtoken1,
 	})
 	assert.NoError(t, err)
 	assert.NotNil(t, refreshResp1)
 
-	rtoken2 := refreshResp1.RefreshToken
+	rtoken2 := refreshResp1.SessionId
 	fmt.Printf("✓ First refresh successful\n")
 	fmt.Printf("  RTOKEN2: %s...\n", rtoken2[:20])
 
@@ -131,7 +131,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 			refreshLogic := NewRefreshLogic(ctx, svcCtx)
 
 			resp, err := refreshLogic.Refresh(&auth.RefreshReq{
-				RefreshToken: rtoken2,
+				SessionId: rtoken2,
 			})
 
 			results[idx] = refreshResult{
@@ -144,7 +144,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 				fmt.Printf("  [%d] ✗ Failed: %v\n", idx, err)
 			} else {
 				tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
-				claims, _ := tokenHelper.ValidateRefreshToken(resp.RefreshToken)
+				claims, _ := tokenHelper.ValidateRefreshToken(resp.SessionId)
 				fmt.Printf("  [%d] ✓ Success: new JTI=%s\n", idx, claims.ID)
 			}
 		}(i)
@@ -163,7 +163,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 			successCount++
 			if result.response != nil {
 				tokenHelper := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
-				claims, _ := tokenHelper.ValidateRefreshToken(result.response.RefreshToken)
+				claims, _ := tokenHelper.ValidateRefreshToken(result.response.SessionId)
 				successJti = claims.ID
 				fmt.Printf("  [%d] SUCCESS - Generated JTI: %s\n", i, successJti)
 			}
@@ -185,7 +185,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 	tokenHelper2 := util.CreateTokenHelper(svcCtx.Config.JwtAuth)
 	for _, result := range results {
 		if result.response != nil {
-			claims, _ := tokenHelper2.ValidateRefreshToken(result.response.RefreshToken)
+			claims, _ := tokenHelper2.ValidateRefreshToken(result.response.SessionId)
 			uniqueJtis[claims.ID] = true
 		}
 	}
@@ -209,7 +209,7 @@ func TestTakeCareOfSidConcurrent(t *testing.T) {
 
 			refreshLogic := NewRefreshLogic(ctx, svcCtx)
 			resp, err := refreshLogic.Refresh(&auth.RefreshReq{
-				RefreshToken: rtoken2, // Try to use the old RTOKEN2
+				SessionId: rtoken2, // Try to use the old RTOKEN2
 			})
 
 			results2[idx] = refreshResult{

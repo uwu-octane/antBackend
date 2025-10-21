@@ -14,21 +14,19 @@ import (
 )
 
 type (
-	LoginReq     = auth.LoginReq
-	LoginResp    = auth.LoginResp
-	LogoutAllReq = auth.LogoutAllReq
-	LogoutReq    = auth.LogoutReq
-	LogoutResp   = auth.LogoutResp
-	PingReq      = auth.PingReq
-	PingResp     = auth.PingResp
-	RefreshReq   = auth.RefreshReq
+	LoginReq   = auth.LoginReq
+	LoginResp  = auth.LoginResp
+	LogoutReq  = auth.LogoutReq
+	LogoutResp = auth.LogoutResp
+	PingReq    = auth.PingReq
+	PingResp   = auth.PingResp
+	RefreshReq = auth.RefreshReq
 
 	AuthService interface {
 		Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PingResp, error)
 		Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginResp, error)
 		Refresh(ctx context.Context, in *RefreshReq, opts ...grpc.CallOption) (*LoginResp, error)
 		Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutResp, error)
-		LogoutAll(ctx context.Context, in *LogoutAllReq, opts ...grpc.CallOption) (*LogoutResp, error)
 	}
 
 	defaultAuthService struct {
@@ -60,9 +58,4 @@ func (m *defaultAuthService) Refresh(ctx context.Context, in *RefreshReq, opts .
 func (m *defaultAuthService) Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutResp, error) {
 	client := auth.NewAuthServiceClient(m.cli.Conn())
 	return client.Logout(ctx, in, opts...)
-}
-
-func (m *defaultAuthService) LogoutAll(ctx context.Context, in *LogoutAllReq, opts ...grpc.CallOption) (*LogoutResp, error) {
-	client := auth.NewAuthServiceClient(m.cli.Conn())
-	return client.LogoutAll(ctx, in, opts...)
 }

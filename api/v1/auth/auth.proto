@@ -8,7 +8,6 @@ service AuthService {
   rpc Login(LoginReq) returns (LoginResp);
   rpc Refresh(RefreshReq) returns (LoginResp);
   rpc Logout(LogoutReq) returns (LogoutResp);
-  rpc LogoutAll(LogoutAllReq) returns (LogoutResp);
 }
 
 message PingReq {}
@@ -22,24 +21,21 @@ message LoginReq {
 //login response
 message LoginResp {
   string access_token = 1;
-  string refresh_token = 2; //
+  string session_id = 2; //
   int64 expires_in = 3; //sec
   string token_type = 4; //bearer
 }
 
 message RefreshReq {
-  string refresh_token = 1;
+  string session_id = 1; //read from cookie by gateway
 }
 
 message LogoutReq{
-  string refresh_token = 1;
+  string session_id = 1;
+  bool all = 2;
 }
 
 message LogoutResp {
   bool ok = 1;
   string message = 2;
-}
-
-message LogoutAllReq {
-  string refresh_token = 1;
 }

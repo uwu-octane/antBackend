@@ -43,3 +43,11 @@ func MakeLoginLimitKey(by, username, ip string) string {
 		return "i:" + i
 	}
 }
+
+func ReadCookie(r *http.Request, name string) string {
+	c, _ := r.Cookie(name)
+	if c == nil {
+		return ""
+	}
+	return c.Value
+}

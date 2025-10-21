@@ -11,17 +11,11 @@ type (
 		Password string `json:"password"`
 	}
 	LoginResp {
-		AccessToken  string `json:"access_token"`
-		RefreshToken string `json:"refresh_token"`
-		ExpiresIn    int64  `json:"expires_in"`
-		TokenType    string `json:"token_type"`
+		AccessToken string `json:"access_token"`
+		SessionId   string `json:"session_id"`
+		ExpiresIn   int64  `json:"expires_in"`
+		TokenType   string `json:"token_type"`
 	}
-	RefreshReq {
-		RefreshToken string `json:"refresh_token"`
-	}
-	// GetUserInfoReq {
-	//  UserId string `json:"user_id"`
-	// }
 	UserInfoResp {
 		UserId      string `json:"user_id"`
 		Username    string `json:"username"`
@@ -39,12 +33,6 @@ type (
 		Ok      bool   `json:"ok"`
 		Message string `json:"message"`
 	}
-	LogoutReq {
-		RefreshToken string `json:"refresh_token"`
-	}
-	LogoutAllReq {
-		RefreshToken string `json:"refresh_token"`
-	}
 )
 
 @server (
@@ -58,17 +46,20 @@ service gateway {
 	@handler Login
 	post /login (LoginReq) returns (LoginResp)
 
+	// using cookie(sid) to refresh
 	@handler Refresh
-	post /refresh (RefreshReq) returns (LoginResp)
+	post /refresh returns (LoginResp)
 
 	@handler Me
 	get /me returns (MeResp)
 
+	// using cookie(sid) to logout, no request body
 	@handler Logout
-	post /logout (LogoutReq) returns (LogoutResp)
+	post /logout returns (LogoutResp)
 
+	// using cookie(sid) to logout all, no request body
 	@handler LogoutAll
-	post /logout-all (LogoutAllReq) returns (LogoutResp)
+	post /logout-all returns (LogoutResp)
 }
 
 @server (

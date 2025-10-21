@@ -10,7 +10,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/zeromicro/go-zero/core/logx"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -29,7 +31,7 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 }
 
 func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
-	//dev only
+
 	if in.GetUsername() == "" || in.GetPassword() == "" {
 		return nil, status.Error(codes.InvalidArgument, "username and password are required")
 	}
@@ -69,16 +71,27 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := grpc.SetHeader(l.ctx, metadata.Pairs("x-refresh-token", refreshToken)); err != nil {
+		return nil, err
+	}
 
 	sid := uuid.NewString()
 	//* user->sid
 	if _, err := l.svcCtx.Redis.Sadd(util.UserSidsKey(l.svcCtx.Key, userID), sid); err != nil {
 		return nil, err
 	}
+	if err := l.svcCtx.Redis.Expire(util.UserSidsKey(l.svcCtx.Key, userID), int(refreshExpireSeconds)); err != nil {
+		return nil, err
+	}
+
 	//* sid->jit put the first refresh jti in to the sid collection
 	if _, err := l.svcCtx.Redis.Sadd(util.SidSetKey(l.svcCtx.Key, sid), refreshJti); err != nil {
 		return nil, err
 	}
+	if err := l.svcCtx.Redis.Expire(util.SidSetKey(l.svcCtx.Key, sid), int(refreshExpireSeconds)); err != nil {
+		return nil, err
+	}
+
 	//* jti ->sid (index of jti to sid)
 	if err := l.svcCtx.Redis.Setex(util.JtiSidKey(l.svcCtx.Key, refreshJti), sid, int(refreshExpireSeconds)); err != nil {
 		return nil, err
@@ -91,9 +104,9 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 	}
 
 	return &auth.LoginResp{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    accessExpireSeconds,
-		TokenType:    "bearer",
+		AccessToken: accessToken,
+		SessionId:   sid,
+		ExpiresIn:   accessExpireSeconds,
+		TokenType:   "bearer",
 	}, nil
 }
