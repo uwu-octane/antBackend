@@ -8,13 +8,17 @@ import (
 )
 
 func SetAuthCookies(w http.ResponseWriter, sid string, refresh string, secure bool) {
+	sameSite := http.SameSiteLaxMode
+	if secure {
+		sameSite = http.SameSiteNoneMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     constvar.CookieSidName,
 		Value:    sid,
 		Path:     constvar.CookiePath,
 		Secure:   secure,
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
+		SameSite: sameSite,
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -23,12 +27,16 @@ func SetAuthCookies(w http.ResponseWriter, sid string, refresh string, secure bo
 		Path:     constvar.CookiePath,
 		Secure:   secure,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSite,
 	})
 }
 
 func ClearAuthCookies(w http.ResponseWriter, secure bool) {
 	expired := time.Unix(0, 0)
+	sameSite := http.SameSiteLaxMode
+	if secure {
+		sameSite = http.SameSiteNoneMode
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     constvar.CookieSidName,
 		Value:    "",
@@ -37,7 +45,7 @@ func ClearAuthCookies(w http.ResponseWriter, secure bool) {
 		MaxAge:   -1,
 		Secure:   secure,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode, //if samesite=none, secure must be true
+		SameSite: sameSite,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     constvar.CookieRefreshName,
@@ -47,6 +55,6 @@ func ClearAuthCookies(w http.ResponseWriter, secure bool) {
 		MaxAge:   -1,
 		Secure:   secure,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSite,
 	})
 }
