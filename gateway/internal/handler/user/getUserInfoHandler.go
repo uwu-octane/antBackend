@@ -7,8 +7,8 @@ import (
 	"net/http"
 
 	"github.com/uwu-octane/antBackend/gateway/internal/logic/user"
+	"github.com/uwu-octane/antBackend/gateway/internal/response"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
-	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
 func GetUserInfoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
@@ -17,9 +17,9 @@ func GetUserInfoHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 		l := user.NewGetUserInfoLogic(r.Context(), svcCtx)
 		resp, err := l.GetUserInfo()
 		if err != nil {
-			httpx.ErrorCtx(r.Context(), w, err)
+			response.FromError(w, err)
 		} else {
-			httpx.OkJsonCtx(r.Context(), w, resp)
+			response.Ok(w, resp)
 		}
 	}
 }

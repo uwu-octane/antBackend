@@ -6,8 +6,11 @@ package auth
 import (
 	"context"
 
+	"github.com/uwu-octane/antBackend/gateway/internal/handler/constvar"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 	"github.com/uwu-octane/antBackend/gateway/internal/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,7 +30,17 @@ func NewMeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *MeLogic {
 }
 
 func (l *MeLogic) Me() (resp *types.MeResp, err error) {
-	// todo: add your logic here and delete this line
+	uid, _ := l.ctx.Value(constvar.CtxUID).(string)
+	jti, _ := l.ctx.Value(constvar.CtxJTI).(string)
+	iat, _ := l.ctx.Value(constvar.CtxIAT).(int64)
 
-	return
+	if uid == "" || jti == "" {
+		return nil, status.Error(codes.Unauthenticated, "unauthenticated")
+	}
+
+	return &types.MeResp{
+		Uid: uid,
+		Jti: jti,
+		Iat: iat,
+	}, nil
 }

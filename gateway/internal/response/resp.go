@@ -15,10 +15,14 @@ type Body[T any] struct {
 }
 
 func Ok[T any](w http.ResponseWriter, data *T) {
+	var result T
+	if data != nil {
+		result = *data
+	}
 	httpx.OkJson(w, &Body[T]{
 		Code: 0,
 		Msg:  "success",
-		Data: *data,
+		Data: result,
 	})
 }
 

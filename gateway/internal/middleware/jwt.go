@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/uwu-octane/antBackend/gateway/internal/handler/constvar"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
 )
 
@@ -20,34 +21,23 @@ func NewJwt(svcCtx *svc.ServiceContext) *Jwt {
 	}
 }
 
-// ctxKey is used to avoid collisions in context values.
-// Consumers can use TokenFromContext to read the token injected by this middleware.
-type ctxKey string
-
-const (
-	ctxKeyToken ctxKey = "jwtToken"
-	ctxUID      ctxKey = "uid"
-	ctxJTI      ctxKey = "jti"
-	ctxIAT      ctxKey = "iat"
-)
-
 func TokenFromContext(ctx context.Context) (string, bool) {
-	val, ok := ctx.Value(ctxKeyToken).(string)
+	val, ok := ctx.Value(constvar.CtxKeyToken).(string)
 	return val, ok && val != ""
 }
 
 func UIDFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(ctxUID).(string)
+	v, ok := ctx.Value(constvar.CtxUID).(string)
 	return v, ok && v != ""
 }
 
 func JTIFromContext(ctx context.Context) (string, bool) {
-	v, ok := ctx.Value(ctxJTI).(string)
+	v, ok := ctx.Value(constvar.CtxJTI).(string)
 	return v, ok && v != ""
 }
 
 func IATFromContext(ctx context.Context) (int64, bool) {
-	v, ok := ctx.Value(ctxIAT).(int64)
+	v, ok := ctx.Value(constvar.CtxIAT).(int64)
 	return v, ok
 }
 
@@ -101,11 +91,11 @@ func (m *Jwt) Handle(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ctxKeyToken, tokenStr)
-		ctx = context.WithValue(ctx, ctxUID, accessClaims.Subject)
-		ctx = context.WithValue(ctx, ctxJTI, accessClaims.ID)
+		ctx := context.WithValue(r.Context(), constvar.CtxKeyToken, tokenStr)
+		ctx = context.WithValue(ctx, constvar.CtxUID, accessClaims.Subject)
+		ctx = context.WithValue(ctx, constvar.CtxJTI, accessClaims.ID)
 		if accessClaims.IssuedAt != nil {
-			ctx = context.WithValue(ctx, ctxIAT, accessClaims.IssuedAt.Unix())
+			ctx = context.WithValue(ctx, constvar.CtxIAT, accessClaims.IssuedAt.Unix())
 		}
 
 		next(w, r.WithContext(ctx))
