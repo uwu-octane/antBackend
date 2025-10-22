@@ -87,3 +87,5 @@ go.sum
 !common/db/master/init/02-pghba.sh
 !common/db/replica/init/10-replica-bootstrap.sh
 !common/db/start.sh
+.md
+!README.md

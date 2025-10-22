@@ -107,6 +107,6 @@ func (l *LoginLogic) Login(in *auth.LoginReq) (*auth.LoginResp, error) {
 		AccessToken: accessToken,
 		SessionId:   sid,
 		ExpiresIn:   accessExpireSeconds,
-		TokenType:   "bearer",
+		TokenType:   "Bearer",
 	}, nil
 }
