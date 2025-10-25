@@ -7,12 +7,11 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/uwu-octane/antBackend/common/envloader"
 	"github.com/uwu-octane/antBackend/gateway/internal/config"
 	"github.com/uwu-octane/antBackend/gateway/internal/handler"
 	"github.com/uwu-octane/antBackend/gateway/internal/middleware"
 	"github.com/uwu-octane/antBackend/gateway/internal/svc"
-
-	"github.com/uwu-octane/antBackend/common/envloader"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -38,7 +37,7 @@ func main() {
 	server.Use(middleware.NewGrpcMetaMiddleware())
 	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
 	handler.RegisterHandlers(server, ctx)
-
+	handler.RegisterRoutesUpstream(server, ctx)
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	server.Start()
 }
