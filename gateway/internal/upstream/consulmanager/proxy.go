@@ -1,11 +1,15 @@
 package consulmanager
 
 import (
+	"bytes"
+	"context"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 	"time"
+
+	"net"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,29 +31,15 @@ func NewDynamicProxy(getTarget func() *url.URL, opt *ProxyOption) http.Handler {
 			r.URL.Scheme = target.Scheme
 			r.URL.Host = target.Host
 
-			if opt.StripPrefix != "" && strings.HasPrefix(r.URL.Path, opt.StripPrefix) {
-				r.URL.Path = strings.TrimPrefix(r.URL.Path, opt.StripPrefix)
-				if r.URL.Path == "" {
-					r.URL.Path = "/"
-				}
+			// Set X-Forwarded-* headers
+			ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+			if ip == "" {
+				ip = r.RemoteAddr
 			}
-
-			pass := map[string]struct{}{}
-			for _, h := range opt.PassHeaders {
-				pass[strings.ToLower(h)] = struct{}{}
-			}
-			for k, v := range r.Header {
-				if _, ok := pass[strings.ToLower(k)]; !ok {
-					continue
-				}
-				r.Header[k] = v
-			}
-
-			if r.Header.Get("X-Forwarded-Host") == "" {
-				r.Header.Set("X-Forwarded-Host", r.Host)
-			}
-			if r.Header.Get("X-Forwarded-Proto") == "" {
-				r.Header.Set("X-Forwarded-Proto", r.URL.Scheme)
+			if xff := r.Header.Get("X-Forwarded-For"); xff == "" {
+				r.Header.Set("X-Forwarded-For", ip)
+			} else {
+				r.Header.Set("X-Forwarded-For", xff+", "+ip)
 			}
 		},
 
@@ -66,6 +56,40 @@ func NewDynamicProxy(getTarget func() *url.URL, opt *ProxyOption) http.Handler {
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 1 * time.Second,
 	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// 只对可能有请求体的方法做探针
+		switch r.Method {
+		case http.MethodPost, http.MethodPut, http.MethodPatch:
+			if r.Body != nil {
+				b, _ := io.ReadAll(r.Body)
+				_ = r.Body.Close()
 
-	return proxy
+				// 打印长度与前 128 字节（避免刷屏）
+				frag := b
+				if len(frag) > 128 {
+					frag = frag[:128]
+				}
+				logx.Infof("[proxy probe] method=%s path=%s len=%d frag=%q",
+					r.Method, r.URL.Path, len(b), string(frag))
+
+				// 复位给下游
+				r.Body = io.NopCloser(bytes.NewReader(b))
+				r.ContentLength = int64(len(b))
+				if len(b) == 0 {
+					// 没长度则交给 chunked
+					r.ContentLength = -1
+					r.TransferEncoding = []string{"chunked"}
+				}
+			}
+		}
+
+		// 请求级超时（可选）
+		if opt.Timeout > 0 {
+			ctx, cancel := context.WithTimeout(r.Context(), opt.Timeout)
+			defer cancel()
+			r = r.WithContext(ctx)
+		}
+
+		proxy.ServeHTTP(w, r)
+	})
 }

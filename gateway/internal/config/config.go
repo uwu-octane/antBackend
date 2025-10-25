@@ -63,7 +63,7 @@ type UpstreamConfig struct {
 type ConsulConf struct {
 	Address    string        `json:",optional"`
 	Scheme     string        `json:",optional"`
-	Datacenter string        `json:",optional"` // ✅ 加上 optional
+	Datacenter string        `json:",optional"`
 	Token      string        `json:",optional"`
 	WaitTime   time.Duration `json:",optional"`
 }
