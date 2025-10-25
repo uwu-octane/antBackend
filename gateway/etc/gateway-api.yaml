@@ -27,6 +27,21 @@ UserRpc:
   KeepAlive: true
   NonBlock: true 
 
+Upstreams:
+  - Name: 'nuxt-ai'
+    Service: 'nuxt-ai'
+    PathPrefix: '/api/ai/'
+    StripPrefix: '/api'
+    TimeoutMS: 5000
+    PassHeaders:
+      - "Authorization"
+      - "X-Request-Id"
+
+Consul:
+  Address: ${CONSUL_HOST}
+  Scheme: http
+  WaitTime: 30s
+
 Auth:
   Strict: true # 严格模式，用于确保调用远程服务时，服务端返回的错误信息是完整的
   TokenLookup: "header: Authorization" # 用于从请求头中获取token
@@ -40,6 +55,7 @@ Auth:
     - /api/v1/refresh
     - /api/v1/logout
     - /api/v1/logout-all
+    - /internal/upstreams 
 
 # JwtAuth:
 #   AccessSecret: ${JWT_SECRET}

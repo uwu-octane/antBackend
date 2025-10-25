@@ -4,6 +4,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -15,6 +17,8 @@ type Config struct {
 	AuthRpc     zrpc.RpcClientConf `json:"AuthRpc"`
 	UserRpc     zrpc.RpcClientConf `json:"UserRpc"`
 	Auth        AuthConfig         `json:"Auth"`
+	Upstreams   []UpstreamConfig   `json:"Upstreams"`
+	Consul      ConsulConf         `json:"Consul"`
 	//JwtAuth   JwtAuthConfig      `json:"JwtAuth"`
 	RateLimit RateLimitConfig `json:"RateLimit"`
 
@@ -45,4 +49,21 @@ type RateLimitConfig struct {
 	MaxAttempts    int
 	By             string
 	RateLimitRedis redis.RedisKeyConf
+}
+
+type UpstreamConfig struct {
+	Name        string
+	Service     string
+	PathPrefix  string
+	StripPrefix string
+	TimeoutMS   int
+	PassHeaders []string
+}
+
+type ConsulConf struct {
+	Address    string        `json:",optional"`
+	Scheme     string        `json:",optional"`
+	Datacenter string        `json:",optional"` // ✅ 加上 optional
+	Token      string        `json:",optional"`
+	WaitTime   time.Duration `json:",optional"`
 }

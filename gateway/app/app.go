@@ -24,7 +24,7 @@ func BuildGatewayServer(configFile string) (service.Service, func(), error) {
 	server.Use(middleware.NewJwt(ctx).Handle)
 	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
 	handler.RegisterHandlers(server, ctx)
-
+	handler.RegisterRoutesUpstream(server, ctx)
 	cleanup := func() {}
 
 	return server, cleanup, nil
