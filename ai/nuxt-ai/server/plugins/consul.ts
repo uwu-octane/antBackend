@@ -17,7 +17,7 @@ export default defineNitroPlugin(async () => {
         port: port,
         tags:['gateway', 'ai', 'http'],
         check: {
-            http: `http://host.docker.internal:${port}/api/health`,
+            http: `http://host.docker.internal:${port}/nuxtapi/health`,
             interval: '10s',
             timeout: '5s',
             deregistercriticalserviceafter: '1m',

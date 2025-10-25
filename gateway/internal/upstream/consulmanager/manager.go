@@ -160,6 +160,11 @@ func (m *Manager) watchOne(ctx context.Context, service string, tgt *Target) {
 		if addr == "" {
 			addr = entries[0].Node.Address
 		}
+
+		if addr == "host.docker.internal" {
+			addr = "127.0.0.1"
+		}
+
 		u := &url.URL{
 			Scheme: "http",
 			Host:   fmt.Sprintf("%s:%d", addr, entries[0].Service.Port),

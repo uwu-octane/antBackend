@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/uwu-octane/antBackend/gateway/internal/config"
 	"github.com/uwu-octane/antBackend/gateway/internal/handler"
 	"github.com/uwu-octane/antBackend/gateway/internal/middleware"
@@ -17,6 +20,12 @@ func BuildGatewayServer(configFile string) (service.Service, func(), error) {
 	server := rest.MustNewServer(
 		c.RestConf,
 		rest.WithCors(),
+		rest.WithNotFoundHandler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if handler.UpstreamEntry(w, r) {
+				return
+			}
+			http.NotFound(w, r)
+		})),
 	)
 
 	ctx := svc.NewServiceContext(c)
@@ -24,7 +33,10 @@ func BuildGatewayServer(configFile string) (service.Service, func(), error) {
 	server.Use(middleware.NewJwt(ctx).Handle)
 	server.Use(middleware.NewPathNormalize(c.ApiPrefix, c.ApiCanonicalPrefix).Handle)
 	handler.RegisterHandlers(server, ctx)
-	handler.RegisterRoutesUpstream(server, ctx)
+	handler.InitUpstreamProxies(ctx)
+
+	//handler.RegisterRoutesUpstream(server, ctx)
+	fmt.Println(server.Routes())
 	cleanup := func() {}
 
 	return server, cleanup, nil

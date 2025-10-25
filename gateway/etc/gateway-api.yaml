@@ -30,8 +30,8 @@ UserRpc:
 Upstreams:
   - Name: 'nuxt-ai'
     Service: 'nuxt-ai'
-    PathPrefix: '/api/ai/'
-    StripPrefix: '/api'
+    PathPrefix: '/nuxtapi/'
+    StripPrefix: ''
     TimeoutMS: 5000
     PassHeaders:
       - "Authorization"
@@ -55,7 +55,8 @@ Auth:
     - /api/v1/refresh
     - /api/v1/logout
     - /api/v1/logout-all
-    - /internal/upstreams 
+    - /internal/upstreams
+    - /nuxtapi/ # Ignore all nuxtapi routes for upstream forwarding 
 
 # JwtAuth:
 #   AccessSecret: ${JWT_SECRET}
