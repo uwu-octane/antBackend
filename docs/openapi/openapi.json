@@ -1,0 +1,283 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Gateway",
+        "description": "Auth Gateway (Access校验 + 认证路由入口)",
+        "version": ""
+    },
+    "paths": {
+        "/api/v1/login": {
+            "post": {
+                "operationId": "Login",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginReq"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/logout": {
+            "post": {
+                "operationId": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogoutResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/logout-all": {
+            "post": {
+                "operationId": "LogoutAll",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogoutResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/me": {
+            "get": {
+                "operationId": "Me",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MeResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/ping": {
+            "get": {
+                "operationId": "Ping",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EmptyResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/refresh": {
+            "post": {
+                "operationId": "Refresh",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/api/v1/user/info": {
+            "get": {
+                "operationId": "GetUserInfo",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserInfoResp"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "user"
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "apiKey": {
+                "type": "apiKey",
+                "description": "Enter JWT Bearer token **_only_**",
+                "name": "Authorization",
+                "in": "header"
+            }
+        },
+        "schemas": {
+            "EmptyResp": {
+                "type": "object",
+                "title": "EmptyResp"
+            },
+            "LoginReq": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "title": "LoginReq",
+                "required": [
+                    "username",
+                    "password"
+                ]
+            },
+            "LoginResp": {
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string"
+                    },
+                    "session_id": {
+                        "type": "string"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "token_type": {
+                        "type": "string"
+                    }
+                },
+                "title": "LoginResp",
+                "required": [
+                    "access_token",
+                    "session_id",
+                    "expires_in",
+                    "token_type"
+                ]
+            },
+            "LogoutResp": {
+                "type": "object",
+                "properties": {
+                    "ok": {
+                        "type": "boolean",
+                        "format": "boolean"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "title": "LogoutResp",
+                "required": [
+                    "ok",
+                    "message"
+                ]
+            },
+            "MeResp": {
+                "type": "object",
+                "properties": {
+                    "uid": {
+                        "type": "string"
+                    },
+                    "jti": {
+                        "type": "string"
+                    },
+                    "iat": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "title": "MeResp",
+                "required": [
+                    "uid",
+                    "jti",
+                    "iat"
+                ]
+            },
+            "UserInfoResp": {
+                "type": "object",
+                "properties": {
+                    "user_id": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "avatar_url": {
+                        "type": "string"
+                    }
+                },
+                "title": "UserInfoResp",
+                "required": [
+                    "user_id",
+                    "username",
+                    "email",
+                    "display_name",
+                    "avatar_url"
+                ]
+            }
+        }
+    }
+}

@@ -28,9 +28,9 @@ UserRpc:
   NonBlock: true 
 
 Upstreams:
-  - Name: 'nuxt-ai'
-    Service: 'nuxt-ai'
-    PathPrefix: '/nuxtapi/'
+  - Name: 'next-ai'
+    Service: 'next-ai'
+    PathPrefix: '/nextapi/'
     StripPrefix: ''
     TimeoutMS: 5000
     PassHeaders:
@@ -56,7 +56,7 @@ Auth:
     - /api/v1/logout
     - /api/v1/logout-all
     - /internal/upstreams
-    - /nuxtapi/ # Ignore all nuxtapi routes for upstream forwarding 
+    - /nextapi # Ignore all nuxtapi routes for upstream forwarding 
 
 # JwtAuth:
 #   AccessSecret: ${JWT_SECRET}

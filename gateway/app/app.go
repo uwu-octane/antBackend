@@ -26,6 +26,7 @@ func BuildGatewayServer(configFile string) (service.Service, func(), error) {
 			}
 			http.NotFound(w, r)
 		})),
+		rest.WithFileServer("/schema", http.Dir("./docs/openapi")),
 	)
 
 	ctx := svc.NewServiceContext(c)
