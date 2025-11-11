@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/uwu-octane/antBackend/common/commonutil"
+	dbutil "github.com/uwu-octane/antBackend/common/db/util"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
 
@@ -28,10 +28,10 @@ type UserModel interface {
 type defaultUserModel struct {
 	replica  sqlx.SqlConn
 	master   sqlx.SqlConn
-	selector *commonutil.Selector
+	selector *dbutil.Selector
 }
 
-func NewUsersModel(replica sqlx.SqlConn, master sqlx.SqlConn, selector *commonutil.Selector) *defaultUserModel {
+func NewUsersModel(replica sqlx.SqlConn, master sqlx.SqlConn, selector *dbutil.Selector) *defaultUserModel {
 	return &defaultUserModel{
 		replica:  replica,
 		master:   master,
