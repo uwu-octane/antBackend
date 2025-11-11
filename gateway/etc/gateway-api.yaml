@@ -36,6 +36,14 @@ Upstreams:
     PassHeaders:
       - "Authorization"
       - "X-Request-Id"
+  - Name: 'next-chiikawapro'
+    Service: 'next-chiikawapro'
+    PathPrefix: '/api/'
+    StripPrefix: ''
+    TimeoutMS: 5000
+    PassHeaders:
+      - "Authorization"
+      - "X-Request-Id"
 
 Consul:
   Address: ${CONSUL_HOST}
@@ -57,7 +65,7 @@ Auth:
     - /api/v1/logout-all
     - /internal/upstreams
     - /nextapi # Ignore all nuxtapi routes for upstream forwarding 
-
+    - /api/ # Ignore all api routes for upstream forwarding 
 # JwtAuth:
 #   AccessSecret: ${JWT_SECRET}
 #   Issuer: "auth.rpc"

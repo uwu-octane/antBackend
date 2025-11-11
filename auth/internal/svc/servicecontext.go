@@ -4,7 +4,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/config"
 	"github.com/uwu-octane/antBackend/auth/internal/model"
 	"github.com/uwu-octane/antBackend/auth/internal/util"
-	"github.com/uwu-octane/antBackend/common/commonutil"
+	commonutil "github.com/uwu-octane/antBackend/common/db/util"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"golang.org/x/sync/singleflight"
