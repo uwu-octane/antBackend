@@ -4,7 +4,7 @@ services:
     container_name: pg-master
     ports:
       - 5433:5432
-    command: 
+    command:
       - "postgres"
       - "-c"
       - "wal_level=replica"
@@ -23,7 +23,8 @@ services:
       - pg-master-data:/var/lib/postgresql/data
       - ./common/db/master/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"${DB_USER}\" -d \"${DB_NAME}\""]
+      test:
+        ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "${DB_USER}" -d "${DB_NAME}"']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,8 +32,7 @@ services:
     networks:
       - ant-network
 
-
-#replica must have the same database name as master
+  #replica must have the same database name as master
   pg-replica:
     image: pg17ulid-alpine
     container_name: pg-replica
@@ -63,7 +63,8 @@ services:
         echo "=== Starting PostgreSQL as standby ==="
         exec docker-entrypoint.sh postgres
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"${DB_USER}\" -d \"${DB_NAME}\""]
+      test:
+        ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "${DB_USER}" -d "${DB_NAME}"']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -86,7 +87,11 @@ services:
     volumes:
       - consul-data:/consul/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS -H 'Accept: application/json' http://127.0.0.1:8500/v1/status/leader | grep -q '\"'"]
+      test:
+        [
+          "CMD-SHELL",
+          'curl -fsS -H ''Accept: application/json'' http://127.0.0.1:8500/v1/status/leader | grep -q ''"''',
+        ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -94,12 +99,41 @@ services:
     networks:
       - ant-network
 
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    environment:
+      #KRaft
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller,broker
+      # 监听地址：容器内部用 kafka:9092，宿主机用 localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
 
+      # 单节点开发环境的最小配置
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_NUM_PARTITIONS: 3
+
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+    ports:
+      - 9092:9092
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - ant-network
 
 volumes:
   pg-master-data:
   pg-replica-data:
   consul-data:
+  kafka-data:
+    driver: local
 
 networks:
   ant-network:

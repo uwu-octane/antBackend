@@ -5,7 +5,8 @@ go 1.25.2
 require (
 	github.com/lib/pq v1.10.9
 	github.com/uwu-octane/antBackend/api v0.0.0
-	github.com/uwu-octane/antBackend/common v0.0.0-20251017202147-d20b86531e0a
+	github.com/uwu-octane/antBackend/common v0.0.0-20251111205948-e856e9c512db
+	github.com/zeromicro/go-queue v1.2.2
 	github.com/zeromicro/go-zero v1.9.1
 	github.com/zeromicro/zero-contrib/zrpc/registry/consul v0.0.0-20250809040225-5c1d3d09e28c
 	google.golang.org/grpc v1.71.0
@@ -61,12 +62,14 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_golang v1.21.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/redis/go-redis/v9 v9.15.0 // indirect
+	github.com/segmentio/kafka-go v0.4.47 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect

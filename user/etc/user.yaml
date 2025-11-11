@@ -24,3 +24,18 @@ UserRedis:
 UserReadStrategy: 
   FromReplica: true
   FallbackToMasterOnReadError: true
+
+Kafka:
+  Env: dev
+  Brokers:
+    - localhost:9092
+
+KqUserEvents:
+  Name: user-events-consumer
+  Brokers:
+    - localhost:9092
+  Group: user.events.user-rpc
+  Topic: dev.user.service.user-events
+  Offset: last
+  Consumers: 1
+  Processors: 1
