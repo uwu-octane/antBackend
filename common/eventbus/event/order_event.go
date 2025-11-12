@@ -1,6 +1,10 @@
-package eventbus
+package event
 
 import "time"
+
+const (
+	TopicSuffixOrderEvents = ".order.service.order-events"
+)
 
 type OrderCreatedEvent struct {
 	OrderID   string    `json:"order_id"`

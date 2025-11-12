@@ -1,4 +1,10 @@
-package eventbus
+package event
+
+import eventbus "github.com/uwu-octane/antBackend/common/eventbus/event"
+
+const (
+	TopicSuffixUserEvents = ".user.service.user-events"
+)
 
 type UserRegisteredEvent struct {
 	UserID      string `json:"user_id"`
@@ -7,9 +13,9 @@ type UserRegisteredEvent struct {
 	AvatarURL   string `json:"avatar_url,omitempty"`
 }
 
-func NewUserRegisteredEvent(userID, producer, traceID, email, displayName, avatarURL string) *Envelope[UserRegisteredEvent] {
-	return NewEnvelope(
-		EventTypeUserRegistered,
+func NewUserRegisteredEvent(userID, producer, traceID, email, displayName, avatarURL string) *eventbus.Envelope[UserRegisteredEvent] {
+	return eventbus.NewEnvelope(
+		eventbus.EventTypeUserRegistered,
 		1,
 		producer,
 		traceID,
@@ -34,9 +40,9 @@ type UserUpdatedEvent struct {
 	Reason  string            `json:"reason,omitempty"`
 }
 
-func NewUserUpdatedEvent(userID, producer, traceID string, changes UserUpdatedFields, reason string) *Envelope[UserUpdatedEvent] {
-	return NewEnvelope(
-		EventTypeUserUpdated,
+func NewUserUpdatedEvent(userID, producer, traceID string, changes UserUpdatedFields, reason string) *eventbus.Envelope[UserUpdatedEvent] {
+	return eventbus.NewEnvelope(
+		eventbus.EventTypeUserUpdated,
 		1,
 		producer,
 		traceID,
@@ -53,9 +59,9 @@ type UserDeletedEvent struct {
 	Reason string `json:"reason,omitempty"`
 }
 
-func NewUserDeletedEvent(userID, producer, traceID, reason string) *Envelope[UserDeletedEvent] {
-	return NewEnvelope(
-		EventTypeUserDeleted,
+func NewUserDeletedEvent(userID, producer, traceID, reason string) *eventbus.Envelope[UserDeletedEvent] {
+	return eventbus.NewEnvelope(
+		eventbus.EventTypeUserDeleted,
 		1,
 		producer,
 		traceID,
@@ -64,4 +70,8 @@ func NewUserDeletedEvent(userID, producer, traceID, reason string) *Envelope[Use
 			Reason: reason,
 		},
 	)
+}
+
+func KeyForUser(userID string) []byte {
+	return []byte(userID)
 }

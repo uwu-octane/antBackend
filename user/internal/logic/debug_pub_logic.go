@@ -2,9 +2,9 @@ package logic
 
 import (
 	"context"
-	"encoding/json"
 
-	"github.com/uwu-octane/antBackend/common/eventbus"
+	"github.com/uwu-octane/antBackend/common/eventbus/publisher"
+	"github.com/uwu-octane/antBackend/user/internal/event"
 	"github.com/uwu-octane/antBackend/user/internal/svc"
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -28,15 +28,16 @@ func (l *DebugPubLogic) Test() error {
 		return nil
 	}
 
-	evt := eventbus.NewUserRegisteredEvent(
-		"user.rpc",
+	userID := "user.prc"
+	key := event.KeyForUser(userID)
+	evt := event.NewUserRegisteredEvent(
+		userID,
 		"", // traceID，可选
 		"user-1",
 		"user@example.com",
 		"DemoUser",
 		"",
 	)
-
-	body, _ := json.Marshal(evt)
-	return l.svcCtx.UserEventsPusher.Push(l.ctx, string(body))
+	logx.Infow("send user registered event", logx.Field("user_id", userID), logx.Field("key", key))
+	return publisher.Send(l.ctx, l.svcCtx.UserEventsPusher, evt, key, nil)
 }

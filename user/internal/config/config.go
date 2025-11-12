@@ -14,8 +14,9 @@ type Config struct {
 	UserRedis        redis.RedisKeyConf
 	UserReadStrategy UserReadStrategy
 
-	Kafka        KafkaConf
-	KqUserEvents kq.KqConf
+	Kafka             KafkaConf
+	KqUserEvents      kq.KqConf
+	KafkaUserProducer KafkaProducerConf
 }
 
 type UserDatabase struct {
@@ -32,4 +33,28 @@ type UserReadStrategy struct {
 type KafkaConf struct {
 	Env     string
 	Brokers []string
+}
+
+type KafkaProducerSASL struct {
+	Enable    bool
+	Mechanism string // plain / scram-sha256 / scram-sha512
+	Username  string
+	Password  string
+}
+
+type KafkaProducerTLS struct {
+	Enable bool
+}
+
+type KafkaProducerConf struct {
+	Acks             string // all/local
+	Idempotent       bool
+	RetryMax         int
+	Compression      string // none/snappy/lz4/zstd/gzip
+	FlushBytes       int
+	FlushMessages    int
+	FlushFrequencyMs int
+	MaxMessageBytes  int
+	SASL             KafkaProducerSASL
+	TLS              KafkaProducerTLS
 }

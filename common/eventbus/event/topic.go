@@ -1,4 +1,4 @@
-package eventbus
+package event
 
 type Env string
 
@@ -11,9 +11,9 @@ type TopicSet struct {
 	UserEvents string
 }
 
-func BuildTopics(env Env) TopicSet {
+func BuildTopics(env Env, suffix string) TopicSet {
 	prefix := string(env)
 	return TopicSet{
-		UserEvents: prefix + ".user.service.user-events",
+		UserEvents: prefix + suffix,
 	}
 }
