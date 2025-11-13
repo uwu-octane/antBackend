@@ -24,3 +24,38 @@ UserRedis:
 UserReadStrategy: 
   FromReplica: true
   FallbackToMasterOnReadError: true
+
+Kafka:
+  Env: dev
+  Brokers:
+    - localhost:9092
+
+KqUserEvents:
+  Name: user-events-consumer
+  Brokers:
+    - localhost:9092
+  Group: user.events.user-rpc
+  Topic: dev.user.service.user-events
+  Offset: last
+  Consumers: 1
+  Processors: 1
+
+KafkaUserProducer:
+  Acks: all
+  Idempotent: true
+  RetryMax: 5
+  Compression: lz4
+  FlushBytes: 1048576
+  FlushMessages: 0
+  FlushFrequencyMs: 25
+  MaxMessageBytes: 1048576
+  SASL:
+    Enable: false
+    Mechanism: plain
+    Username: "${KAFKA_SASL_USERNAME}"
+    Password: "${KAFKA_SASL_PASSWORD}"
+  TLS:
+    Enable: false
+
+
+  

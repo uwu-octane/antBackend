@@ -4,7 +4,7 @@ import (
 	"github.com/uwu-octane/antBackend/auth/internal/config"
 	"github.com/uwu-octane/antBackend/auth/internal/model"
 	"github.com/uwu-octane/antBackend/auth/internal/util"
-	commonutil "github.com/uwu-octane/antBackend/common/db/util"
+	dbutil "github.com/uwu-octane/antBackend/common/db/util"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"golang.org/x/sync/singleflight"
@@ -27,7 +27,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	redis := redis.MustNewRedis(c.AuthRedis.RedisConf)
 	master := sqlx.NewSqlConn(c.AuthDatabase.Driver, c.AuthDatabase.MasterDSN)
 	replica := sqlx.NewSqlConn(c.AuthDatabase.Driver, c.AuthDatabase.ReplicaDSN)
-	selector := commonutil.NewSelector(replica, master, c.AuthReadStrategy.FromReplica, c.AuthReadStrategy.FallbackToMasterOnReadError, nil)
+	selector := dbutil.NewSelector(replica, master, c.AuthReadStrategy.FromReplica, c.AuthReadStrategy.FallbackToMasterOnReadError, nil)
 	return &ServiceContext{
 		Config:      c,
 		Redis:       redis,
