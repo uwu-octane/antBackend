@@ -1,8 +1,11 @@
 package app
 
 import (
+	"context"
+
 	"github.com/uwu-octane/antBackend/api/v1/user"
 	"github.com/uwu-octane/antBackend/user/internal/config"
+	"github.com/uwu-octane/antBackend/user/internal/logic"
 	"github.com/uwu-octane/antBackend/user/internal/server"
 	"github.com/uwu-octane/antBackend/user/internal/svc"
 	"github.com/zeromicro/go-zero/core/conf"
@@ -18,7 +21,7 @@ func BuildUserRpcServer(configFile string) (service.Service, func(), error) {
 	conf.MustLoad(configFile, &c, conf.UseEnv())
 
 	ctx := svc.NewServiceContext(c)
-
+	_ = logic.NewDebugPubLogic(context.Background(), ctx).Test()
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		user.RegisterUserServiceServer(grpcServer, server.NewUserServiceServer(ctx))
 
