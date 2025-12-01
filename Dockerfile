@@ -7,9 +7,8 @@ RUN apk add --no-cache git make
 # 设置工作目录
 WORKDIR /build
 
-# 复制 go.work（必需），go.work.sum 可选（如果不存在会自动生成）
-COPY go.work ./
-COPY go.work.sum* ./
+# 复制 go.work 和 go.work.sum
+COPY go.work go.work.sum ./
 
 # 复制所有模块的 go.mod 和 go.sum
 COPY go.mod go.sum ./
@@ -20,8 +19,8 @@ COPY common/go.mod common/go.sum ./common/
 COPY gateway/go.mod gateway/go.sum ./gateway/
 COPY user/go.mod user/go.sum ./user/
 
-# 同步工作空间（如果 go.work.sum 不存在会自动生成）
-RUN go work sync || true
+# 下载依赖（利用 Docker 缓存层）
+RUN go work sync
 
 # 复制所有源代码
 COPY . .
