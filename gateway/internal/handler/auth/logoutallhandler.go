@@ -20,7 +20,7 @@ func LogoutAllHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sid := util.ReadCookie(r, constvar.CookieSidName)
 		if sid == "" {
-			response.FromError(w, status.Error(codes.InvalidArgument, "session id is required"))
+			response.FromError(w, status.Error(codes.InvalidArgument, "logout all: session id is required"))
 			return
 		}
 		l := auth.NewLogoutAllLogic(r.Context(), svcCtx)

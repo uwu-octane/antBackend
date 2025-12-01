@@ -20,7 +20,7 @@ func Ok[T any](w http.ResponseWriter, data *T) {
 		result = *data
 	}
 	httpx.OkJson(w, &Body[T]{
-		Code: 0,
+		Code: 200,
 		Msg:  "success",
 		Data: result,
 	})

@@ -31,3 +31,9 @@ AuthDatabase:
 AuthReadStrategy: 
   FromReplica: true
   FallbackToMasterOnReadError: true
+
+Telemetry:
+  Name: auth.rpc
+  Endpoint: ${TELEMETRY_ENDPOINT}
+  Sampler: 1.0
+  Batcher: otlpgrpc

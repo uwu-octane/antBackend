@@ -73,12 +73,12 @@ func NewRefreshLogic(ctx context.Context, svcCtx *svc.ServiceContext) *RefreshLo
 func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	sid := in.GetSessionId()
 	if strings.TrimSpace(sid) == "" {
-		return nil, errors.New("session id is required")
+		return nil, errors.New("refresh: session id is required")
 	}
 
 	md, ok := metadata.FromIncomingContext(l.ctx)
 	if !ok {
-		return nil, errors.New("metadata not found")
+		return nil, errors.New("refresh: metadata not found")
 	}
 	vals := md.Get("x-refresh-token")
 	if len(vals) == 0 || strings.TrimSpace(vals[0]) == "" {
@@ -162,7 +162,7 @@ func (l *RefreshLogic) executeRefreshWithRetry(oldJti, uid string) (string, stri
 			lastErr = err
 			// Check if it's a temporary error (timeout, network, etc.)
 			if isTemporaryError(err) && attempt < maxRetries-1 {
-				logx.WithContext(l.ctx).Infof("refresh retry attempt=%d user=%s jti=%s err=%v",
+				logx.WithContext(l.ctx).Infof("refresh: retry attempt=%d user=%s jti=%s err=%v",
 					attempt+1, uid, oldJti, err)
 				time.Sleep(10 * time.Millisecond) // Small backoff
 				continue
@@ -202,11 +202,11 @@ func (l *RefreshLogic) handleRefreshError(username, jti string, err error) {
 
 	if isBusinessError {
 		// Deterministic business failure - don't forget, just log
-		logx.WithContext(l.ctx).Infof("refresh-business-error user=%s jti=%s err=%v", username, jti, err)
+		logx.WithContext(l.ctx).Infof("refresh: business-error user=%s jti=%s err=%v", username, jti, err)
 	} else {
 		// Temporary/infrastructure error - forget to allow retry
 		l.svcCtx.RfGroup.Forget(jti)
-		logx.WithContext(l.ctx).Errorf("refresh-infra-error user=%s jti=%s err=%v (forgotten)", username, jti, err)
+		logx.WithContext(l.ctx).Errorf("refresh: infra-error user=%s jti=%s err=%v (forgotten)", username, jti, err)
 	}
 }
 

@@ -29,12 +29,12 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 func (l *LogoutLogic) Logout(in *auth.LogoutReq) (*auth.LogoutResp, error) {
 	sid := in.GetSessionId()
 	if sid == "" {
-		return nil, errors.New("session id is required")
+		return nil, errors.New("logout: session id is required")
 	}
 
 	uid, err := l.revokeOneSid(l.svcCtx.Key, sid)
 	if err != nil {
-		return nil, fmt.Errorf("failed to revoke sid: %s, %v", sid, err)
+		return nil, fmt.Errorf("logout: failed to revoke sid: %s, %v", sid, err)
 	}
 
 	if in.GetAll() && uid != "" {
@@ -44,7 +44,7 @@ func (l *LogoutLogic) Logout(in *auth.LogoutReq) (*auth.LogoutResp, error) {
 		//revoke all sids of the user
 		for _, s := range allSids {
 			if _, err := l.revokeOneSid(l.svcCtx.Key, s); err != nil {
-				l.Logger.Errorf("revoke sid in all failed uid=%s sid=%s err=%v", uid, s, err)
+				l.Logger.Errorf("logout: revoke sid in all failed uid=%s sid=%s err=%v", uid, s, err)
 			}
 		}
 		//delete user sids set
@@ -61,7 +61,7 @@ func (l *LogoutLogic) revokeOneSid(key, sid string) (string, error) {
 	sidKey := util.SidSetKey(key, sid)
 	jtis, err := l.svcCtx.Redis.Smembers(sidKey)
 	if err != nil {
-		return "", fmt.Errorf("failed to get jtis: %w", err)
+		return "", fmt.Errorf("logout: failed to get jtis: %w", err)
 	}
 	if len(jtis) == 0 {
 		_, _ = l.svcCtx.Redis.Del(sidKey)
