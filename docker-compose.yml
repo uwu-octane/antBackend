@@ -128,11 +128,84 @@ services:
     networks:
       - ant-network
 
+  redis:
+    image: redis:latest
+    container_name: chiikawa-redis
+    ports:
+      - 6379:6379
+    command: redis-server --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis-data:/data
+    networks:
+      - ant-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ant-backend-app
+    ports:
+      - "28256:28256" # Gateway
+      - "7777:7777" # Auth RPC
+      - "7778:7778" # User RPC
+    environment:
+      # Database
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      PG_MASTER_URL: "postgres://${DB_USER}:${DB_PASSWORD}@pg-master:5432/${DB_NAME}?sslmode=disable"
+      PG_REPLICA_URL: "postgres://${DB_USER}:${DB_PASSWORD}@pg-replica:5432/${DB_NAME}?sslmode=disable"
+
+      # Consul
+      CONSUL_HOST: consul:8500
+
+      # Redis
+      REDIS_HOST: chiikawa-redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Gateway
+      MODE: ${MODE:-dev}
+      VITE_HOST: ${VITE_HOST:-http://localhost:3000}
+
+      # Telemetry (optional)
+      TELEMETRY_ENDPOINT: ${TELEMETRY_ENDPOINT:-}
+
+      # Kafka (optional)
+      KAFKA_SASL_USERNAME: ${KAFKA_SASL_USERNAME:-}
+      KAFKA_SASL_PASSWORD: ${KAFKA_SASL_PASSWORD:-}
+
+      TZ: Europe/Berlin
+    depends_on:
+      consul:
+        condition: service_healthy
+      pg-master:
+        condition: service_healthy
+      pg-replica:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+    networks:
+      - ant-network
+    restart: unless-stopped
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://localhost:28256/api/v1/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
 volumes:
   pg-master-data:
   pg-replica-data:
   consul-data:
   kafka-data:
+  redis-data:
     driver: local
 
 networks:

@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Documentation (exclude .md files but keep docs/openapi directory)
+*.md
+docs/**/*.md
+AGENTS.md
+BUGFIX_SUMMARY.md
+# Note: docs/ directory itself is NOT excluded, only .md files within it
+
+# Test files
+*_test.go
+tests/
+test_*.sh
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# AI/Nuxt (if not needed in build)
+ai/
+
+# Other
+*.txt
+todo.txt
+done.txt
+goctl.txt
+
