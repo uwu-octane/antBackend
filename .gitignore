@@ -19,8 +19,6 @@
 # Dependency directories (remove the comment below to include it)
 vendor/
 
-# Go workspace file
-go.work
 
 # Build output
 /build/
@@ -80,9 +78,6 @@ token.md
 BUGFIX_SUMMARY.md
 done.txt
 todo.txt
-go.work.sum
-**/go.sum
-go.sum
 *.sh
 !common/db/master/init/02-pghba.sh
 !common/db/replica/init/10-replica-bootstrap.sh
