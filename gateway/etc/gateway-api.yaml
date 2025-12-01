@@ -28,19 +28,11 @@ UserRpc:
   NonBlock: true 
 
 Upstreams:
-  - Name: 'next-ai'
-    Service: 'next-ai'
-    PathPrefix: '/nextapi/'
+  - Name: 'chiikawa-admin'
+    Service: 'chiikawa-admin'
+    PathPrefix: '/chiikawa/api'
     StripPrefix: ''
-    TimeoutMS: 5000
-    PassHeaders:
-      - "Authorization"
-      - "X-Request-Id"
-  - Name: 'next-chiikawapro'
-    Service: 'next-chiikawapro'
-    PathPrefix: '/api/'
-    StripPrefix: ''
-    TimeoutMS: 5000
+    TimeoutMS: 36000000
     PassHeaders:
       - "Authorization"
       - "X-Request-Id"
@@ -65,7 +57,6 @@ Auth:
     - /api/v1/logout-all
     - /internal/upstreams
     - /nextapi # Ignore all nuxtapi routes for upstream forwarding 
-    - /api/ # Ignore all api routes for upstream forwarding 
 # JwtAuth:
 #   AccessSecret: ${JWT_SECRET}
 #   Issuer: "auth.rpc"
@@ -84,3 +75,11 @@ RateLimit:
     Key: ratelimit
     Tls: false
     NonBlock: true
+
+Telemetry:
+  Name: gateway
+  Endpoint: "localhost:4317"  
+  Sampler: 1.0
+  Batcher: otlphttp          
+  OtlpHttpPath: /v1/traces
+  OtlpHttpSecure: false        
