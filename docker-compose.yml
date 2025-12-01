@@ -1,5 +1,8 @@
 services:
   pg-master:
+    build:
+      context: ./common/db
+      dockerfile: common/db/Dockerfile
     image: pg17ulid-alpine
     container_name: pg-master
     ports:
