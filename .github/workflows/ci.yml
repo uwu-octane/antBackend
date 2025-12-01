@@ -74,9 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # Note: golangci-lint may not yet support Go 1.25.x
-    # This job will pass once a compatible version is released
-    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
