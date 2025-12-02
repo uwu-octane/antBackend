@@ -73,6 +73,7 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            cd $GITHUB_WORKSPACE
+            cd /home/tao/Documents/antBackend
+            git pull
             docker compose pull
             docker compose up -d --remove-orphans
