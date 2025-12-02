@@ -146,9 +146,7 @@ services:
       - ant-network
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/uwu-octane/antBackend:master
     container_name: ant-backend-app
     ports:
       - "28256:28256" # Gateway
