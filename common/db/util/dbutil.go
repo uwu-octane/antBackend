@@ -41,7 +41,10 @@ func (s *Selector) Do(ctx context.Context, fn func(ctx context.Context, conn sql
 			return err
 		}
 		if s.OnFallback != nil {
-			s.OnFallback(ctx, backup)
+			if fallbackErr := s.OnFallback(ctx, backup); fallbackErr != nil {
+				// Log fallback hook error but continue with fallback
+				_ = fallbackErr
+			}
 		}
 		return fn(ctx, backup)
 	}

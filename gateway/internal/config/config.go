@@ -61,9 +61,9 @@ type UpstreamConfig struct {
 }
 
 type ConsulConf struct {
-	Address    string        `json:",optional"`
-	Scheme     string        `json:",optional"`
-	Datacenter string        `json:",optional"`
-	Token      string        `json:",optional"`
-	WaitTime   time.Duration `json:",optional"`
+	Address    string        `json:",optional"` //nolint:staticcheck // go-zero specific JSON tag
+	Scheme     string        `json:",optional"` //nolint:staticcheck // go-zero specific JSON tag
+	Datacenter string        `json:",optional"` //nolint:staticcheck // go-zero specific JSON tag
+	Token      string        `json:",optional"` //nolint:staticcheck // go-zero specific JSON tag
+	WaitTime   time.Duration `json:",optional"` //nolint:staticcheck // go-zero specific JSON tag
 }

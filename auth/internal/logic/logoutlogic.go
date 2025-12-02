@@ -44,7 +44,7 @@ func (l *LogoutLogic) Logout(in *auth.LogoutReq) (*auth.LogoutResp, error) {
 		//revoke all sids of the user
 		for _, s := range allSids {
 			if _, err := l.revokeOneSid(l.svcCtx.Key, s); err != nil {
-				l.Logger.Errorf("logout: revoke sid in all failed uid=%s sid=%s err=%v", uid, s, err)
+				logx.WithContext(l.ctx).Errorf("logout: revoke sid in all failed uid=%s sid=%s err=%v", uid, s, err)
 			}
 		}
 		//delete user sids set

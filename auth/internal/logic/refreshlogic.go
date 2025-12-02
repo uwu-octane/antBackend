@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -96,6 +97,9 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 
 	refreshKey := util.RedisKey(l.svcCtx.Key, util.RedisKeyTypeRefresh, jti)
 	storedUid, err := l.svcCtx.Redis.Get(refreshKey)
+	if err != nil {
+		return nil, fmt.Errorf("refresh: failed to get refresh token: %w", err)
+	}
 	if storedUid == "" {
 		return nil, ErrRefreshNotFound
 	}
@@ -112,7 +116,9 @@ func (l *RefreshLogic) Refresh(in *auth.RefreshReq) (*auth.LoginResp, error) {
 	res, runErr, _ := l.svcCtx.RfGroup.Do(jti, func() (any, error) {
 		access, newJti, err := l.executeRefreshWithRetry(jti, uid)
 		if err == nil {
-			l.takeCareOfSid(l.svcCtx.Key, jti, uid, newJti)
+			if err := l.takeCareOfSid(l.svcCtx.Key, jti, uid, newJti); err != nil {
+				logx.WithContext(l.ctx).Errorf("refresh: takeCareOfSid failed jti=%s newJti=%s err=%v", jti, newJti, err)
+			}
 		}
 		resp := &auth.LoginResp{
 			AccessToken: access,

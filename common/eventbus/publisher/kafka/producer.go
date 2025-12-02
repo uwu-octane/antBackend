@@ -46,8 +46,8 @@ func (s *SaramaPublisher) Publish(ctx context.Context, topic string, data []byte
 		}
 	}
 	const maxRetries = 3
+	backoff := 150 * time.Millisecond
 	for i := 0; i < maxRetries; i++ {
-		backoff := 150 * time.Millisecond
 		_, _, err := s.producer.SendMessage(msg)
 		if err == nil {
 			return nil
@@ -66,11 +66,13 @@ func (s *SaramaPublisher) Publish(ctx context.Context, topic string, data []byte
 		} else {
 			continue
 		}
-		select {
-		case <-time.After(backoff):
-			backoff *= 2
-		case <-ctx.Done():
-			return ctx.Err()
+		if i < maxRetries-1 {
+			select {
+			case <-time.After(backoff):
+				backoff *= 2
+			case <-ctx.Done():
+				return ctx.Err()
+			}
 		}
 	}
 	return fmt.Errorf("failed to send message after %d retries", maxRetries)
