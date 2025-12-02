@@ -2,6 +2,7 @@ Name: gateway-api
 Host: 0.0.0.0
 Port: 28256
 GatewayMode: ${MODE}
+Timeout: 0
 Cors:
   - "${VITE_HOST}"
 
@@ -32,7 +33,7 @@ Upstreams:
     Service: 'chiikawa-admin'
     PathPrefix: '/chiikawa/api'
     StripPrefix: ''
-    TimeoutMS: 36000000
+    TimeoutMS: 360000
     PassHeaders:
       - "Authorization"
       - "X-Request-Id"

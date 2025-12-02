@@ -44,9 +44,7 @@ Thumbs.db
 
 # Environment files
 .env
-.env.local
-.env.*.local
-.env.goose
+.env.*
 
 # Log files
 *.log
