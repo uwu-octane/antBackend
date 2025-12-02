@@ -64,16 +64,10 @@ jobs:
     needs: build-and-push
     if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            set -e
-            cd /home/tao/Documents/antBackend
-            git pull
-            docker compose pull
-            docker compose up -d --remove-orphans
+      - name: Deploy
+        run: |
+          set -e
+          cd /home/tao/Documents/antBackend
+          git pull
+          docker compose pull
+          docker compose up -d --remove-orphans
