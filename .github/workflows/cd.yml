@@ -69,5 +69,5 @@ jobs:
           set -e
           cd /home/tao/Documents/antBackend
           git pull
-          docker compose pull
+          docker compose pull app
           docker compose up -d --remove-orphans
