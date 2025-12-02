@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.work'
+          go-version-file: "go.work"
           cache: true
 
       - name: Sync workspace
@@ -49,14 +49,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.work'
+          go-version-file: "go.work"
           cache: true
 
       - name: Verify Go version
         run: go version
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.6.2
           args: --timeout=5m
